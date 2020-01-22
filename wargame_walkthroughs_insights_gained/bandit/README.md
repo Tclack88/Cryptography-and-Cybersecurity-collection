@@ -21,7 +21,7 @@ for loops in bash:
 for i in $(ls); do echo $i ; done
 ```
 
-(for actual challange, had to find which dashed file contained an ASCII text:
+(for actual challenge, had to find which dashed file contained an ASCII text:
 
 ```bash
 for i in $(ls); do file ./$i; done
@@ -93,7 +93,7 @@ c
 since I want to find the only ACTUALLY UNIQUE line, I'd have to sort, then use
 uniq -u. so the following command returns "d":
 
-sort file.txt | uniq -u 
+`sort file.txt | uniq -u `
 
 
 
@@ -142,12 +142,12 @@ here's my rotate by 13 script, shifting all lower and upper cases by 13 letters
 ```bash
 cat data.txt | tr [a-m,n-z,A-M,N-Z] [n-z,a-m,N-Z,A-M]
 ```
-only imporovement is I can remove the commas and eliminate brackets
+only improvement is I can remove the commas and eliminate brackets
 ```bash
 cat data.txt | tr a-mn-zA-MN-Z n-za-mN-ZA-M
 ```
 
-!!!!! or in VIM, just highligh in visual mode and use `g?` !!!!!
+!!!!! or in VIM, just highlight in visual mode and use `g?` !!!!!
 
 
 
@@ -208,7 +208,7 @@ BRUTE FORCE
 This was my poor attempt (it worked, but not every connection would be made
 it was also slow)
 
-(Background: a Daemon is listening on port 30002 if it recieves the password
+(Background: a Daemon is listening on port 30002 if it receives the password
 for bandit24 plus a 4-digit secret pin, it returns the password for bandit25)
 
 ```bash
@@ -238,7 +238,7 @@ do echo UoMYTrfrBFHyQXmg6gzctqAwOmw1IohZ $i >> pins
 done && cat pins | nc localhost 30002
 ```
 
-(NOTE: the && makes the next command execute if the previous one was successful, indecated by error code of 0. Contrast to || which executes if previous command failed. It has to be placed where it is, not on a newline)
+(NOTE: the `&&` makes the next command execute if the previous one was successful, indicated by error code of 0. Contrast to `||` which executes if previous command failed. It has to be placed where it is, not on a newline)
 
 
 
