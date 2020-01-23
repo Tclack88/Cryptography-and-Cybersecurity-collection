@@ -1,4 +1,5 @@
 # Lessons learned for bandit wargame:
+[Bandit wargame on overthewire.org](https://overthewire.org/wargames/bandit/)
 
 files beginning with a "-":
 
