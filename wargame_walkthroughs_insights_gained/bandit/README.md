@@ -146,6 +146,8 @@ cat data.txt | tr [a-m,n-z,A-M,N-Z] [n-z,a-m,N-Z,A-M]
 only improvement is I can remove the commas and eliminate brackets
 ```bash
 cat data.txt | tr a-mn-zA-MN-Z n-za-mN-ZA-M
+or
+cat data.txt | tr a-zA-Z n-za-mN-ZA-M # a-mn-z is the same as a-z, duh
 ```
 
 !!!!! or in VIM, just highlight in visual mode and use `g?` !!!!!
@@ -172,7 +174,11 @@ tar -xfv blah.tar.gz
 
 lots of socket/port stuff I need to learn
 
+notes:
 
+- login with ssh:  `ssh who@place -p xxxx`
+- with key: `ssh -i key who@aplace -p xxxx`
+- send command via ssh: `ssh ..... '<bash commands>'`
 
 
 ## 19-20 find out which files are owned by root and have an setuid binary:
