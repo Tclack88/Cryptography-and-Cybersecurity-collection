@@ -254,8 +254,17 @@ done && cat pins | nc localhost 30002
 
 
 
-## 26-27
+## 25, 26, 27
 while waiting for "more" command to load pages, pressing "v" will take you to vim
 within vim, you can actually edit any other document. 
 
 `:e /path/name/here/document.txt` will let you do that
+
+need to change the shell? `:set shell=/bin/bash`. Then execute commands `:! echo H4x0r`
+
+## git tricks
+
+See history of a file:
+
+`git log <file>` shows specific commit histories. (`-p` flag will show the actual patches)
+
