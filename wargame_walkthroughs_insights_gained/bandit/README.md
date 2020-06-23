@@ -268,3 +268,9 @@ See history of a file:
 
 `git log <file>` shows specific commit histories. (`-p` flag will show the actual patches)
 
+Checkout other branches (other branches may hold code not in production):
+
+`git checkout <tab for tab completion options>`
+
+Tags are a thing:
+`git tag` will list them all. If it's annotated you can `git show <tag name> to see that annotation
