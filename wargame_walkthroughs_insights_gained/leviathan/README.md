@@ -49,19 +49,21 @@ it calls on /bin/cat)
 
 Solution:
 
--make a file file with two spaces in the name
+-make a file, our own, with two spaces in the name
+
 	ex: "mikayla smells.txt"
+
 -make a soft symbolic link to the password containing file
+
 	in this case "mikayla"
+
 -Run the program on the two spaced text file
 
 How it works (best guess):
 
-`cat` will ignore the space and treat it as two separate files, so we want to 
-"cat mikayla" but we can't do that directly since the symbolic link it follows
-to doesn't match permission. But the file we create ("mikayla smells.txt") does
-So the approved permissions allows the program to continue and "cat" will
-be able to do its thing
+The program performs an `access` check on the selected file. This only looks at the _Real_ UID, not the _Effective_ UID. If successful it will `cat` the file specified.
+
+With our two-worded filename, `cat` will ignore the space and treat it as two separate files, so we want to "cat mikayla" but we can't do that directly since the symbolic link it follows to doesn't match permission with our real UID. But the file we create ("mikayla smells.txt") does. So the approved permissions allows the program to continue and "cat" will be able to do its thing
 
 
 
