@@ -1,5 +1,5 @@
 <?php
-
+# Natas 10 -> 11
 $key1 =  base64_decode('ClVLIh4ASCsCBE8lAxMacFMZV2hdVVotEhhUJQNVAmhSFlkrEBZZaAw=');
 
 function xor_encrypt($in,$key) {

