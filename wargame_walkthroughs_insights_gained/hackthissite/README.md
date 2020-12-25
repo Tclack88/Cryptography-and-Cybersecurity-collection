@@ -31,3 +31,15 @@ k1kh31b1n55h.php
 ```
 
 Not sure why ";cat k1kh31b1n55h.php" does not show the contents, but it shows up when I add it to the url as "blahblah.com/k1kh31b1n55h.php" 
+
+
+
+## Server Side Includes (SSI) Injection
+
+.shtml is vulnerable to this. You can change the dynamic content of the page by adding in what looks like html comments of the form `<!--#directive cmd="cmd" --> `
+
+directive/cmd pairs can include: echo-var,  include-virtual, exec-cmd
+
+Gives server commands (need to know/guess the server because commands are different if Linux vs windows for example)
+
+eg. `<!--#exec cmd="ls" -->`  (in windows, "ls" would be "dir" for example)

@@ -287,3 +287,55 @@ else if (! exif_imagetype($_FILES['uploadedfile']['tmp_name'])) {
         echo "File is not an image";
 ```
 The way this appears to work is by checking the "magic" hex codes in the front which indicate filetype. [There are many](https://en.wikipedia.org/wiki/List_of_file_signatures),here's one for jpg: `FF D8 FF EE`. A command line tool called simply `hexeditor` can be used to add these 4 to the front (`hexeditor -b <file>` to open in buffer mode from which new byes can be added with ctrl-A)
+
+
+## :::::::::::::: SQL inection ::::::::::::::::
+
+Here's a php script that references a MySQL database:
+
+```php
+<?
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysql_connect('localhost', 'natas14', '<censored>');
+    mysql_select_db('natas14', $link);
+    
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\" and password=\"".$_REQUEST["password"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    if(mysql_num_rows(mysql_query($query, $link)) > 0) {
+            echo "Successful login! The password for natas15 is <censored><br>";
+    } else {
+            echo "Access denied!<br>";
+    }
+    mysql_close($link);
+} else {
+?>
+
+<form action="index.php" method="POST">
+Username: <input name="username"><br>
+Password: <input name="password"><br>
+<input type="submit" value="Login" />
+</form>
+```
+
+focusing in on the query:
+`"SELECT * from users where username=\"".$_REQUEST["username"]."\" and password=\"".$_REQUEST["password"]."\""`
+
+cleaning it up a little, this is what it will appear based on the form's input (NOTE: I'm not sure why they're being stored in `$_REQUEST` instead of `$_POST`, one of the peculiarities I'm not aware of in php)
+
+`SELECT * from users where username="<username>" and password="<password>"`
+
+Notice the quotes. So knowing a little bit of SQL, I know the syntax. I probably can't guess the username and even more likely wouldn't be able to also guess the password, so my strategy is to put the following in the username of the form (keeping password blank is fine)
+
+`" OR 1 #`
+
+This way, the query above reads
+
+`SELECT * from users where username="" OR 1 # and password=""`
+
+So "get me everything from the database where the username is "" or True". One of these is going to be true, either the usernamwe being blank or simply TRUE = True, so we're dandy.
+
+
+
