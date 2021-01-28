@@ -89,3 +89,34 @@ if ($round === 1) {
 }
 ?>
 ```
+
+## User-Agent control ##
+
+one challenge in picoCTF has you click a button `flag` (leading to the `/flag` page) but clicking it gives "you're not picobrowser! 
+
+
+I've seen this before, the referrer is what they're asking about. Here's the raw curl request:
+
+```bash
+curl 'https://jupiter.challenges.picoctf.org/problem/28921/flag' \
+  -H 'Connection: keep-alive' \
+  -H 'Upgrade-Insecure-Requests: 1' \
+  -H 'User-Agent: Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Mobile Safari/537.36' \
+  -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9' \
+  -H 'Sec-Fetch-Site: same-origin' \
+  -H 'Sec-Fetch-Mode: navigate' \
+  -H 'Sec-Fetch-User: ?1' \
+  -H 'Sec-Fetch-Dest: document' \
+  -H 'Referer: https://jupiter.challenges.picoctf.org/problem/28921/flag' \
+  -H 'Accept-Language: en-US,en;q=0.9,fr;q=0.8,es;q=0.7' \
+  -H 'Cookie: PHPSESSID=rinmbr5fv8gekg81vitj13cj5s' \
+  --compressed
+```
+Deleting all the uneccesary garbage and changing the user-agent:
+
+```bash
+curl 'https://jupiter.challenges.picoctf.org/problem/28921/flag' \
+  -H 'User-Agent: picobrowser' \
+```
+
+Full disclosure: I thought at first it was the referer, but that's involved with redirects. Random facts which may be useful. Whenever your security doesn't change or is upgraded (HTTP -> HTTP, HTTPS -> HTTPS, HTTP -> HTTPS) a referrer is tagged on. But whenever you downgrade (HTTPS -> HTTP) referrer coems back as empty. Another use for changing the user-agent is to have the interface change as if you were a mobile device (useful as a developer for sure)
