@@ -120,3 +120,8 @@ curl 'https://jupiter.challenges.picoctf.org/problem/28921/flag' \
 ```
 
 Full disclosure: I thought at first it was the referer, but that's involved with redirects. Random facts which may be useful. Whenever your security doesn't change or is upgraded (HTTP -> HTTP, HTTPS -> HTTPS, HTTP -> HTTPS) a referrer is tagged on. But whenever you downgrade (HTTPS -> HTTP) referrer coems back as empty. Another use for changing the user-agent is to have the interface change as if you were a mobile device (useful as a developer for sure)
+
+
+Get header info with curl:
+
+`curl -I http://mercury.picoctf.net:47967/`
