@@ -125,3 +125,17 @@ Full disclosure: I thought at first it was the referer, but that's involved with
 Get header info with curl:
 
 `curl -I http://mercury.picoctf.net:47967/`
+
+brute force a cookie
+```bash
+for f in {1..100}
+do
+        echo $f
+curl --silent 'http://mercury.picoctf.net:27177/check' \
+  -H "Cookie: name=$f" | grep "pico"
+done
+```
+
+Apache Server 
+
+The congiguration file is `.htaccess`, searching for it in the url may be helpful. If the host machine is a Mac, a `.DS_Store` may also be available. This file typically stores custom attributes (background image, icon position, etc.) This is similart o Windows' `desktop.ini`.
