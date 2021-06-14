@@ -312,3 +312,17 @@ if (isset($_POST["submit"])) {
 }
 ?>
 ```
+
+curl headers
+
+I've already worked on puzzles with referrers, but there are other headers like DNT (do not track) and setting the ip addres of the request (though it doesn't seem to ACTUALLY hide it, as this command still tells me I'm in the US `curl -H "X-Forwarded-For: 2.16.66.0" ipinfo.io`
+
+```bash
+curl -v 'http://mercury.picoctf.net:38322/' \
+        -H 'User-Agent: PicoBrowser' \
+        -H 'Referer: mercury.picoctf.net:38322' \
+        -H "Date: Jan 12 2018" \
+        -H "DNT: 1" \
+        -H "X-Forwarded-For: 2.16.66.0" \
+        -H "Accept-Language: sv"
+```
