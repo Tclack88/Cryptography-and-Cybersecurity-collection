@@ -1,0 +1,28 @@
+ASLR
+
+Address space layout randomization (ASLR) is a computer security technique involved in protection from buffer overflow attacks. ASLR randomly arranges the address space positions of key data areas of a process, including the base of the executable and the positions of the stack, heap, and libraries.
+
+In short, when ASLR is turned on, the addresses of the stack, etc will be randomized. This causes a lot of difficulty in predicting addresses while exploitation.
+
+
+To check the status:
+
+cat /proc/sys/kernel/randomize_va_space 
+if it returns a 0, it's disabled
+if it returns a 2, it's enabled
+
+To Dissable:
+
+echo "0" | [sudo] dd of=/proc/sys/kernel/randomize_va_space
+
+To Enable:
+
+echo "2" | [sudo] dd of=/proc/sys/kernel/randomize_va_space
+
+tcpdump -i wsp3s0 (<-- or wlan, etc)
+
+Who is on your wifi?
+ifconfig   -- look for the ip in the wifi and netmask. I get:
+inet 192.168.86.242  netmask 255.255.255.0  broadcast 192.168.86.255
+Which tells me the first 24 bytes are masked, so we scan the rest:
+sudo nmap -sn 192.186.86.0/24

