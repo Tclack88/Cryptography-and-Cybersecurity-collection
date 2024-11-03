@@ -16,12 +16,12 @@ p: (doesn't matter because commented out with --)
 2. `or` `and` `like` `=` `--`
 
 u: admin'; #
-p: (doesn't materr because commented out with #)
+p: (doesn't matter because commented out with #)
 
 3. `or` `and` `=` `like` `>` `<` `--` (I suspect also `#`)
 
 u: admin';
-p: (doesn't matter because statment has been ended)
+p: (doesn't matter because statement has been ended)
 
 4 `or` `and` `=` `like` `>` `<` `--` `admin` + common filters (whitespace!)
 
@@ -112,14 +112,14 @@ curl 'https://jupiter.challenges.picoctf.org/problem/28921/flag' \
   -H 'Cookie: PHPSESSID=rinmbr5fv8gekg81vitj13cj5s' \
   --compressed
 ```
-Deleting all the uneccesary garbage and changing the user-agent:
+Deleting all the unnecessary garbage and changing the user-agent:
 
 ```bash
 curl 'https://jupiter.challenges.picoctf.org/problem/28921/flag' \
   -H 'User-Agent: picobrowser' \
 ```
 
-Full disclosure: I thought at first it was the referer, but that's involved with redirects. Random facts which may be useful. Whenever your security doesn't change or is upgraded (HTTP -> HTTP, HTTPS -> HTTPS, HTTP -> HTTPS) a referrer is tagged on. But whenever you downgrade (HTTPS -> HTTP) referrer coems back as empty. Another use for changing the user-agent is to have the interface change as if you were a mobile device (useful as a developer for sure)
+Full disclosure: I thought at first it was the referrer, but that's involved with redirects. Random facts which may be useful. Whenever your security doesn't change or is upgraded (HTTP -> HTTP, HTTPS -> HTTPS, HTTP -> HTTPS) a referrer is tagged on. But whenever you downgrade (HTTPS -> HTTP) referrer comes back as empty. Another use for changing the user-agent is to have the interface change as if you were a mobile device (useful as a developer for sure)
 
 
 Get header info with curl:
@@ -138,7 +138,7 @@ done
 
 Apache Server 
 
-The congiguration file is `.htaccess`, searching for it in the url may be helpful. If the host machine is a Mac, a `.DS_Store` may also be available. This file typically stores custom attributes (background image, icon position, etc.) This is similart o Windows' `desktop.ini`.
+The configuration file is `.htaccess`, searching for it in the url may be helpful. If the host machine is a Mac, a `.DS_Store` may also be available. This file typically stores custom attributes (background image, icon position, etc.) This is similar to Windows' `desktop.ini`.
 
 AES-CBC
 
@@ -146,7 +146,7 @@ AES-CBC (cipher block chain) is vulnerable to bit flipping attacks. Given a page
 
 md5 collision
 
-Related to th birthday paradox, I came across a challenge where you must upload two pdf files which have the same md5 hash, but they differ. Presumably php hashes both files and checks their equality. I rememeber hearing that md5 is broken, so I assumed that meant it was easy/quick to break, so I set off at first by creating a file then continuing to make new files and seeing if they have the same hash as the first. 
+Related to the birthday paradox, I came across a challenge where you must upload two pdf files which have the same md5 hash, but they differ. Presumably php hashes both files and checks their equality. I remember hearing that md5 is broken, so I assumed that meant it was easy/quick to break, so I set off at first by creating a file then continuing to make new files and seeing if they have the same hash as the first. 
 
 ```python
 #make_pdf.py
@@ -184,7 +184,7 @@ done
 ```
 Why is there a sleep for almost a second? Because I've observed that the time of creation of the pdf file contributes to the hash. In my initial tests, without sleeping, I was seeing multiple rows that were the same.
 
-Needless to say, this didn't progress quickly. I realized this isn't taking advantage of the birthday paradox. The reason it's a paradox is because we initially think "it's unlikely there will be someone else with my same birthday". -- but that's not what the paradox is about. It's about the likelihood of ANY 2 people having the same birthday. So it's like sampling without replacement. So I wrote a python script that would generate the files, hash it, then store the hash as a dictionary key (value being th file name). In this iteration I also "cut out the middleman" by not creating text files, and those textfiles into a pdf. 
+Needless to say, this didn't progress quickly. I realized this isn't taking advantage of the birthday paradox. The reason it's a paradox is because we initially think "it's unlikely there will be someone else with my same birthday". -- but that's not what the paradox is about. It's about the likelihood of ANY 2 people having the same birthday. So it's like sampling without replacement. So I wrote a python script that would generate the files, hash it, then store the hash as a dictionary key (value being the file name). In this iteration I also "cut out the middleman" by not creating text files, and those textfiles into a pdf. 
 
 ```python
 #makepdfs.py
@@ -241,7 +241,7 @@ while len(collisions) < 2:
 
     i +=1
 ```
-It ran for 7 hours without finding anything. Then I calculated the odds of finding ONE hash in th form I want is about 3 in a billion. I had in those 8 hours created and checked 100 million files. I was one thousandth of the way there and estimated 2.3 years before I would find on number.
+It ran for 7 hours without finding anything. Then I calculated the odds of finding ONE hash in the form I want is about 3 in a billion. I had in those 8 hours created and checked 100 million files. I was one thousandth of the way there and estimated 2.3 years before I would find on number.
 
 I already found a list of magic hashes, for example: `240610708:0e462097431906509019562988736854`, when I tested them out, I found that `echo "240610708" | md5sum` DID NOT give the magic hash, or anything remotely similar. But then I found that `echo -n "240610708" | md5sum` did. It's all about removing that newline character. I also found out with just a text file, it's the contents and nothing else that is hashed (probably it's bytes) so I could also do `echo "240610708" | md5sum > file.txt`, then boom, I have such a file which hashes. I figured the fil creation step was slowing me down quite a bit, so I could just search for the hashes first and THEN create the files. From the list I found, I know that there are many hashes of capital letters of 8 digits which give magic hashes. 8 digits is not that much so I can brute force it. Rather than grabbing the posted items, I really want to generate them. So this gives me two such hashes in less than 30 mins:
 
@@ -315,7 +315,7 @@ if (isset($_POST["submit"])) {
 
 curl headers
 
-I've already worked on puzzles with referrers, but there are other headers like DNT (do not track) and setting the ip addres of the request (though it doesn't seem to ACTUALLY hide it, as this command still tells me I'm in the US `curl -H "X-Forwarded-For: 2.16.66.0" ipinfo.io`
+I've already worked on puzzles with referrers, but there are other headers like DNT (do not track) and setting the ip address of the request (though it doesn't seem to ACTUALLY hide it, as this command still tells me I'm in the US `curl -H "X-Forwarded-For: 2.16.66.0" ipinfo.io`
 
 ```bash
 curl -v 'http://mercury.picoctf.net:38322/' \
@@ -326,3 +326,41 @@ curl -v 'http://mercury.picoctf.net:38322/' \
         -H "X-Forwarded-For: 2.16.66.0" \
         -H "Accept-Language: sv"
 ```
+
+## Binary and reverse engineering
+I've never been to keen on binary / bit operators. The `^`, `<<` and `>>` commands in python were kind of mysteries to me and not ever something I found relevant. But here's a 2021 challenge that required their use. A file called `enc` included the following string
+
+`灩捯䍔䙻ㄶ形楴獟楮獴㌴摟潦弸彥㜰㍢㐸㙽`
+
+but also provided was the python one liner
+
+`''.join([chr((ord(words[i]) << 8) + ord(words[i + 1])) for i in range(0, len(words), 2)])`
+
+Clearly every two characters of the (I assumed just ascii-containing) plaintext was taken. The first of each pair (1st, 3rd, 5th, etc) was shifted 8 bits to the left adding a 0 pad to the right-end and the 2nd of each pair (2nd, 4th, 6th, etc) are just added as is. Each ASCII character is only 8 bits, so this ensures the two characters remain independent. So the left end of each pair can be recovered by bit shifting to the right. The right end can be recovered using bitwise logic. But as I have no practice with working at this level, it took a bit to figure out. It's easy to visualize though. For instance if the original first characters are `{P` which is decimal `123` and `80` or binary `01111011` and `01010000` (quick way to check in bash: `echo "obase=2;123"`). Then stacked and added, these become:
+
+`0111101100000000` ( `{` )
+
+`0000000001010000` ( `P` )
+
+`0111101101010000` (`筐` from the number 31568)
+
+So I can clearly just get the original right-most by performing and "and" operation with `0000000011111111` Because (0 and X) = 0 , (1 and X) is X
+
+`0111101101010000`
+
+`0000000011111111`&
+
+`0000000001010000`
+
+The following python code works (once the string is read from file into a `word` variable
+```python3
+decrypted_L = []
+decrypted_R = []
+for c in word:
+        shifted = chr(ord(c) >> 8)
+        decrypted_L.append(shifted)
+        decrypted_R.append(chr(ord(c) & 0b11111111  ))
+
+print(''.join(decrypted_L[i]+decrypted_R[i] for i in range(len(decrypted_L))))
+```
+Not sure if there's a sleeker one liner I can do, but this is sufficient
