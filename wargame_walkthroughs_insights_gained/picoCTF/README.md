@@ -364,3 +364,37 @@ for c in word:
 print(''.join(decrypted_L[i]+decrypted_R[i] for i in range(len(decrypted_L))))
 ```
 Not sure if there's a sleeker one liner I can do, but this is sufficient
+
+## Forensics
+To be clear, I have very little understanding of how this works, but I'm keeping notes of what I learned. One (easy) challenge provides a file called `flag2of2-final.pdf`. but when you call `file flag2of2-final.pdf` on it, it returns
+
+`flag2of2-final.pdf: PNG image data, 50 x 50, 8-bit/color RGBA, non-interlaced`
+
+Confusing. The thing telling us it's a png comes from the "[magic numbers](https://www.geeksforgeeks.org/working-with-magic-numbers-in-linux/)". The "magic numbers" of the png file show up at the front as `89 50 4e 47 0d 0a 1a 0a`. The first few lines of a hexdump gives:
+
+```
+$ hexdump flag2of2-final.pdf | head -n 2
+0000000 5089 474e 0a0d 0a1a 0000 0d00 4849 5244
+0000010 0000 3200 0000 3200 0608 0000 1e00 883f
+```
+There they are (although kinda reversed because probably something about little vs big endian which I don't remember). It's clearer if used the `xxd` tool:
+```
+t$ xxd flag2of2-final.pdf | head -n 2
+00000000: 8950 4e47 0d0a 1a0a 0000 000d 4948 4452  .PNG........IHDR
+00000010: 0000 0032 0000 0032 0806 0000 001e 3f88  ...2...2......?.
+```
+(not reversed because of...some reason). Down several lines of the xxd hex dump we can see:
+
+```
+00000380: 0f86 f099 66ec 0000 0000 4945 4e44 ae42  ....f.....IEND.B
+00000390: 6082 2550 4446 2d31 2e34 0a25 c7ec 8fa2  `.%PDF-1.4.%....
+000003a0: 0a25 2549 6e76 6f63 6174 696f 6e3a 2070  .%%Invocation: p
+```
+The `IEND` part has something to do with the end of the "png part". Finally exiftool also shows this warning:
+```
+$exiftool flag2of2-final.pdf
+... stuff I've cut out...
+Warning                         : [minor] Trailer data after PNG IEND chunk`
+... stuff I've cut out...
+```
+So, copying the xxd hex dump from top to just before the `%PDF` portion into a new file (called `newf`) and reversing the xxd hexdump with `cat newf | xxd -r > backdata`, this backdata opens as a png giving the other portion.
