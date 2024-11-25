@@ -118,26 +118,31 @@ def monogram_frequency(text, include_space=False):
 				monograms[t] = 1
 
 	monograms = dict(sorted(monograms.items(), key=lambda w: w[1], reverse=True))
+	total_chars = 0
+	for char in monograms:
+		total_chars+= monograms[char]
+
+	for char in monograms:
+		monograms[char] = monograms[char]/total_chars
+
 	return monograms
-
-#sample = "hello! My name is Trevor, I'm super-duper happy to be here"
-#monogram_freq = monogram_frequency(sample)
-#print(monogram_freq)
-
 
 # task 2
 """
 Use your function in a script to take your corpus and compile the frequencies of each letter. Do not include spaces as a letter. Your script should store the frequency table in a format that you can read and understand later.
 """
 
-src_text = ''
-with open(src) as f:
-
+loaded_corpus = ''
+with open(dst) as f:
 	for line in f:
-		src_text += line
+		loaded_corpus += line
 
-monogram_freq = monogram_frequency(src_text)
-#print(monogram_freq)
+monogram_freq = monogram_frequency(loaded_corpus)
+
+monogram_freq_nospaces_file = "monogram_freq.json"
+shutil.rmtree(monogram_freq_nospaces_file, ignore_errors=True)
+with open(monogram_freq_nospaces_file, 'w') as f:
+	json.dump(monogram_freq, f)
 
 
 # task 3
@@ -145,8 +150,8 @@ monogram_freq = monogram_frequency(src_text)
 Use your function in a script to compile a table of monogram frequencies that includes spaces. Remember that newline characters separate words, so they should count as spaces. Store the table in a format that you can read and use later.
 """
 
-monogram_freq_spaces = monogram_frequency(src_text, include_space=True)
-monogram_frequency_file = "monogram_freq.json"
+monogram_freq_spaces = monogram_frequency(loaded_corpus, include_space=True)
+monogram_frequency_file = "monogram_freq_spaces.json"
 shutil.rmtree(monogram_frequency_file, ignore_errors=True)
 
 with open(monogram_frequency_file, 'w') as f:
@@ -177,11 +182,11 @@ Write a script to compile and save a table of tetragram frequencies that include
 """
 
 
-def make_tetragram_freq(src_text, include_spaces=False):
+def make_tetragram_freq(loaded_corpus, include_spaces=False):
 	allowed = string.ascii_uppercase
 	if include_spaces:
 		allowed += ' '
-	upper_src = ' '.join(src_text.upper().split()) # split on new lines, tabs, etc. then rejoin
+	upper_src = ' '.join(loaded_corpus.upper().split()) # split on new lines, tabs, etc. then rejoin
 	upper_src = upper_src.replace('-',' ')
 	one_string =  ''.join([c for c in list(upper_src) if c in allowed])
 
@@ -191,12 +196,18 @@ def make_tetragram_freq(src_text, include_spaces=False):
 	for i in range(len(one_string)-3): # -3 to ensure we stop at final tetra val
 		tetra = one_string[i:i+4]
 		tetragrams[tetra] += 1
-	tetragrams = sorted(tetragrams.items(), key=lambda d: d[1], reverse=True)
+	tetragrams = dict(sorted(tetragrams.items(), key=lambda d: d[1], reverse=True))
+	count = 0
+	# get frequencies
+	for tetra in tetragrams:
+		count += tetragrams[tetra]
+	for tetra in tetragrams:
+		tetragrams[tetra] /= count
 	return dict(tetragrams)
 	
 
-#print(make_tetragram_freq(src_text))
-#print(make_tetragram_freq(src_text, include_spaces=True))
+#print(make_tetragram_freq(loaded_corpus))
+#print(make_tetragram_freq(loaded_corpus, include_spaces=True))
 
 # task 3
 """
@@ -204,27 +215,27 @@ Write another script to take your tables and create two new tables. In the new t
 """
 
 def log_freq(ngram,base=10):
-	for n in ngram:
+	for n in ngram:	
 		try:
 			ngram[n] = math.log(ngram[n],base)
 		except ValueError:
-			pass
+			ngram[n] = -math.inf
 	return ngram
 
 
-log_freq_nospaces = log_freq(make_tetragram_freq(src_text))
-log_freq_file_nospaces = 'tetragram_loq_frequency_nospaces.txt'
+log_freq_nospaces = log_freq(make_tetragram_freq(loaded_corpus))
+log_freq_file_nospaces = 'tetragram_log_frequency_nospaces.json'
 shutil.rmtree(log_freq_file_nospaces,ignore_errors=True)
 with open(log_freq_file_nospaces,'w') as f:
 	json.dump(log_freq_nospaces, f, indent=4)
 
 
-log_freq_spaces = log_freq(make_tetragram_freq(src_text,include_spaces=True))
-log_freq_file_spaces = 'tetragram_loq_frequency_spaces.txt'
+log_freq_spaces = log_freq(make_tetragram_freq(loaded_corpus,include_spaces=True))
+log_freq_file_spaces = 'tetragram_log_frequency_spaces.json'
 shutil.rmtree(log_freq_file_spaces,ignore_errors=True)
 with open(log_freq_file_spaces,'w') as f:
 	json.dump(log_freq_spaces, f, indent=4)
-	
+
 # Task4
 """
 Write a function (or two functions) to read your tables of logarithms of tetragram frequencies into some data object so that they can be used in a program/script.
@@ -237,4 +248,6 @@ def load_log_frequencies(filename):
 		
 
 log_freqs = load_log_frequencies(log_freq_file_nospaces)
-print(log_freqs)
+#keys = list(log_freqs.keys())
+#for k in keys[:10]:
+#	print(f'{k}: {log_freqs[k]}')
