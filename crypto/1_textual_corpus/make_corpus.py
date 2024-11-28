@@ -251,3 +251,17 @@ log_freqs = load_log_frequencies(log_freq_file_nospaces)
 #keys = list(log_freqs.keys())
 #for k in keys[:10]:
 #	print(f'{k}: {log_freqs[k]}')
+
+
+# Unit 7 - the chi-squared statistic
+
+def chi_square_test(vals, exp_vals):
+	total = 0
+	for i in range(len(vals)):
+		total += ((vals[i] - exp_vals[i])**2)/exp_vals[i]
+
+	return total
+
+chi_square =  chi_square_test([1.1,2.5,7.3],[1,3,7])
+
+print(chi_square)
