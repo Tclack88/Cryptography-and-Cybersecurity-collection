@@ -262,6 +262,52 @@ def chi_square_test(vals, exp_vals):
 
 	return total
 
-chi_square =  chi_square_test([1.1,2.5,7.3],[1,3,7])
+# exercise
+#chi_square =  chi_square_test([1.1,2.5,7.3],[1,3,7])
+#print(chi_square)
 
-print(chi_square)
+
+# Unit 8 - monogram fitness with the chi-squared statistic
+
+# Task 1
+"""
+Write a function that calculates the fitness of a piece of text by comparing its monogram frequencies to those of English. Use the functions that you previously wrote for finding the monogram frequencies of a text and for calculating the χ2 statistic. Remember that since the χ2 statistic is small for a good fit, you should either negate the result or take its reciprocal when defining the fitness. The frequencies that you found from your corpus take the role of the expected values when doing the calculation. Whether spaces are used can be determined by an optional argument to your function
+"""
+
+def chi_square_fitness_mono(sample_freq, eng_freq, spaces=False):
+	sample = sample_freq.copy()
+	if not spaces:
+		sample.pop(" ",None)
+	vals = []
+	exp_vals = []
+	exp_vals
+	for l in sample.keys():
+		vals.append(sample[l])
+		exp_vals.append(eng_freq[l])
+	return chi_square_test(vals,exp_vals)
+
+
+# exercise 1
+"""
+ For various lengths, take several randomly chosen passages of each length from your corpus (or any other texts) and find the fitness of each. Make a graph of the fitness as a function of the length of  the selected text. From your graph, notice the variability in the fitness and how it depends on the  length of text.
+"""
+
+lengths = list(range(100,1000,100))
+chi_squared_vals = []
+
+section = ""
+for i in range(1,10):
+	start = i*len(loaded_corpus)//10
+	section += loaded_corpus[start:start+500]
+	sample_monogram = monogram_frequency(section)
+	chi = chi_square_fitness_mono(sample_monogram,monogram_freq_spaces)
+	#print(section)
+	#print(chi)
+	#print()
+	chi_squared_vals.append(chi)
+
+import matplotlib.pyplot as plt
+plt.scatter(lengths,chi_squared_vals)
+plt.title("χ2 statistic as a function of sample size")
+plt.show()
+
