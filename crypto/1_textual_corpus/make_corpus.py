@@ -13,7 +13,9 @@ Take your corpus and create another one that contains no punctuation. Be careful
 import fileinput
 import itertools
 import json
+import matplotlib.pyplot as plt
 import math
+import numpy as np
 import shutil
 import string
 
@@ -306,8 +308,28 @@ for i in range(1,10):
 	#print()
 	chi_squared_vals.append(chi)
 
-import matplotlib.pyplot as plt
-plt.scatter(lengths,chi_squared_vals)
-plt.title("χ2 statistic as a function of sample size")
-plt.show()
+#plt.scatter(lengths,chi_squared_vals)
+#plt.title("χ2 statistic as a function of sample size")
+#plt.show()
 
+# Unit 9 - Angle between vectors
+"""
+1. Write a function that finds the inner product of two vectors. You can represent vectors as lists or tuples. The dimension of the vectors can be found with the len() function. If the dimensions of the two vectors do not match, the function should throw and exception, raise an error, or somesuch.
+2. Write a function that returns the cosine of the angle between two vectors
+"""
+def inner_product(u,v):
+	try:
+		product = np.dot(u,v)
+	except Exception as e:
+		print(e)
+	return product
+
+def cos_angle(u,v):
+	num = inner_product(u,v)
+	denom = np.sqrt(inner_product(u,u)*inner_product(v,v))
+	return num/denom
+
+#u = [1,2,3]
+#v = [2,4,6]
+#angle = cos_angle(u,v)
+#print(angle)
