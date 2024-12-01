@@ -333,3 +333,41 @@ def cos_angle(u,v):
 #v = [2,4,6]
 #angle = cos_angle(u,v)
 #print(angle)
+
+# Unit 10 - monogram fitness with angle between vectors
+
+def monogram_cos_fitness(sample_monograms, corpus_monograms,spaces=False):
+	sample_copy = sample_monograms.copy()
+	if not spaces:
+		try:
+			sample_copy.pop(' ')
+		except:
+			pass
+
+	sample = []
+	source = []
+	for k in sample_copy.keys():
+		sample.append(sample_copy[k])
+		source.append(corpus_monograms[k])
+
+	cos_fitness = cos_angle(sample,source)
+	return cos_fitness
+
+
+
+"""
+For various lengths, take several randomly chosen passages of each length from your corpus (or any other texts) and find the fitness of each. Make a graph of the fitness as a function of the length of the selected text. From your graph, notice the variability in the fitness and how it depends on the length of text.
+"""
+#lengths = list(range(100,1000,100))
+#cos_fitness_vals = []
+
+#section = ""
+#for i in range(1,10):
+#	start = i*len(loaded_corpus)//10
+#	section += loaded_corpus[start:start+500]
+#	sample_monogram_frequency = monogram_frequency(section)
+#	sample_cos_fitness = monogram_cos_fitness(sample_monogram_frequency, monogram_freq_spaces)
+#	cos_fitness_vals.append(sample_cos_fitness)
+#plt.scatter(lengths, cos_fitness_vals)
+#plt.title("cosine fitness as a function of sample size")
+#plt.show()
