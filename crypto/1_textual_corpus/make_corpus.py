@@ -19,6 +19,8 @@ import numpy as np
 import shutil
 import string
 
+regenerate = False # flag for determining whether or not to redo the longer steps (such as calculating monogram or tetragram frequencies
+
 src = "alice_in_wonderland.txt"
 #src = "Jurassic_Park_eng.txt"
 dst = "eng_corpus.txt"
@@ -224,19 +226,20 @@ def log_freq(ngram,base=10):
 			ngram[n] = -math.inf
 	return ngram
 
-
-log_freq_nospaces = log_freq(make_tetragram_freq(loaded_corpus))
 log_freq_file_nospaces = 'tetragram_log_frequency_nospaces.json'
-shutil.rmtree(log_freq_file_nospaces,ignore_errors=True)
-with open(log_freq_file_nospaces,'w') as f:
-	json.dump(log_freq_nospaces, f, indent=4)
+if regenerate:
+	log_freq_nospaces = log_freq(make_tetragram_freq(loaded_corpus))
+	shutil.rmtree(log_freq_file_nospaces,ignore_errors=True)
+	with open(log_freq_file_nospaces,'w') as f:
+		json.dump(log_freq_nospaces, f, indent=4)
 
 
-log_freq_spaces = log_freq(make_tetragram_freq(loaded_corpus,include_spaces=True))
 log_freq_file_spaces = 'tetragram_log_frequency_spaces.json'
-shutil.rmtree(log_freq_file_spaces,ignore_errors=True)
-with open(log_freq_file_spaces,'w') as f:
-	json.dump(log_freq_spaces, f, indent=4)
+if regenerate:
+	log_freq_spaces = log_freq(make_tetragram_freq(loaded_corpus,include_spaces=True))
+	shutil.rmtree(log_freq_file_spaces,ignore_errors=True)
+	with open(log_freq_file_spaces,'w') as f:
+		json.dump(log_freq_spaces, f, indent=4)
 
 # Task4
 """
@@ -371,3 +374,41 @@ For various lengths, take several randomly chosen passages of each length from y
 #plt.scatter(lengths, cos_fitness_vals)
 #plt.title("cosine fitness as a function of sample size")
 #plt.show()
+
+# Unit 11 - Tetragram fitness
+"""
+ Write a function that calculates the tetragram fitness of a piece of text. It should use your table of logarithms of tetragram frequencies. Since you only want to read the table into memory once, you should use the function you wrote in Unit 4 for that purpose before you call the fitness function. Find a way to tell the function whether or not spaces are included in the text
+"""
+
+def tetragram_fitness(sample,spaces=False):
+	""" assumes everything has been cleaned. Maybe go back and add cleaning feature for "Regular text" """
+	sample_copy = sample
+	if spaces:
+		freq_file = 'tetragram_log_frequency_spaces.json'
+	else:
+		sample_copy = ''.join(sample.split())
+		freq_file = 'tetragram_log_frequency_nospaces.json'
+	L = len(sample_copy)
+	log_freq = load_log_frequencies(freq_file)
+	sample_tetragrams = [sample_copy[i:i+4] for i in range(len(sample_copy)-3)]
+	log_sum = 0
+	for tetra in sample_tetragrams:
+		log_sum += log_freq[tetra]
+	return log_sum/(L-3)
+
+
+lengths = list(range(100,1000,100))
+tetragram_fitness_vals = []
+
+section = ""
+for i in range(1,10):
+   start = i*len(loaded_corpus)//10
+   section += loaded_corpus[start:start+500]
+   sample_tetragram_fitness = tetragram_fitness(section)
+   tetragram_fitness_vals.append(sample_tetragram_fitness)
+
+print(lengths)
+print(tetragram_fitness_vals)
+plt.scatter(lengths, tetragram_fitness_vals)
+plt.title("tetragram fitness as a function of sample size")
+plt.show()
