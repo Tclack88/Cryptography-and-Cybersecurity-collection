@@ -201,10 +201,10 @@ def make_tetragram_freq(loaded_corpus, include_spaces=False):
 		tetra = one_string[i:i+4]
 		tetragrams[tetra] += 1
 	tetragrams = dict(sorted(tetragrams.items(), key=lambda d: d[1], reverse=True))
-	count = 0
+	count = len(tetragrams.keys())
 	# get frequencies
-	for tetra in tetragrams:
-		count += tetragrams[tetra]
+	#for tetra in tetragrams:
+	#	count += tetragrams[tetra]
 	for tetra in tetragrams:
 		tetragrams[tetra] /= count
 	return dict(tetragrams)
@@ -223,7 +223,8 @@ def log_freq(ngram,base=10):
 		try:
 			ngram[n] = math.log(ngram[n],base)
 		except ValueError:
-			ngram[n] = -math.inf
+			ngram[n] = -1000
+			#ngram[n] = -math.inf
 	return ngram
 
 log_freq_file_nospaces = 'tetragram_log_frequency_nospaces.json'
@@ -389,11 +390,14 @@ def tetragram_fitness(sample,spaces=False):
 		sample_copy = ''.join(sample.split())
 		freq_file = 'tetragram_log_frequency_nospaces.json'
 	L = len(sample_copy)
+	print(sample_copy)
 	log_freq = load_log_frequencies(freq_file)
 	sample_tetragrams = [sample_copy[i:i+4] for i in range(len(sample_copy)-3)]
 	log_sum = 0
 	for tetra in sample_tetragrams:
 		log_sum += log_freq[tetra]
+		if log_freq[tetra] == -1000:
+			print(tetra)
 	return log_sum/(L-3)
 
 
@@ -404,6 +408,9 @@ section = ""
 for i in range(1,10):
    start = i*len(loaded_corpus)//10
    section += loaded_corpus[start:start+500]
+   #print()
+   #print(loaded_corpus[start:start+500])
+   #print()
    sample_tetragram_fitness = tetragram_fitness(section)
    tetragram_fitness_vals.append(sample_tetragram_fitness)
 
