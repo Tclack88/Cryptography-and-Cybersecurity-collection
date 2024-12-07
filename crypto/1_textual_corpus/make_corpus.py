@@ -19,7 +19,7 @@ import numpy as np
 import shutil
 import string
 
-regenerate = False # flag for determining whether or not to redo the longer steps (such as calculating monogram or tetragram frequencies
+regenerate = True # flag for determining whether or not to redo the longer steps (such as calculating monogram or tetragram frequencies
 
 src = "alice_in_wonderland.txt"
 #src = "Jurassic_Park_eng.txt"
@@ -105,22 +105,26 @@ with open(word_count_file) as f:
 Write a function that takes a piece of text and calculates the frequencies of each letter. Allow for the possibility of either including spaces or excluding them (possibly with an optional parameter). End-of-line characters should count as a space.
 """
 
+def count_letters(text, spaces = False):
+	letters = {}
+	allowed = string.ascii_uppercase
+	if spaces:
+		allowed += " "
+	for t in text:
+		if t in allowed:
+			if letters.get(t,None):
+				letters[t] += 1
+			else:
+				letters[t] = 1
+	return letters
+	
+
 def monogram_frequency(text, include_space=False):
 	"""
 	Assumes the text has already been "cleaned"
 	(removed non-alpha chars, newlines => " ", etc.) 
 	"""
-	monograms = {}
-	allowed = string.ascii_uppercase
-	if include_space:
-		allowed += " "
-	for t in text:
-		if t in allowed:
-			if monograms.get(t,None):
-				monograms[t] += 1
-			else:
-				monograms[t] = 1
-
+	monograms = count_letters(text, include_space)
 	monograms = dict(sorted(monograms.items(), key=lambda w: w[1], reverse=True))
 	total_chars = 0
 	for char in monograms:
@@ -401,21 +405,72 @@ def tetragram_fitness(sample,spaces=False):
 	return log_sum/(L-3)
 
 
-lengths = list(range(100,1000,100))
-tetragram_fitness_vals = []
+#lengths = list(range(100,1000,100))
+#tetragram_fitness_vals = []
+
+#section = ""
+#for i in range(1,10):
+#   start = i*len(loaded_corpus)//10
+#   section += loaded_corpus[start:start+500]
+#   sample_tetragram_fitness = tetragram_fitness(section)
+#   tetragram_fitness_vals.append(sample_tetragram_fitness)
+
+#print(lengths)
+#print(tetragram_fitness_vals)
+#plt.scatter(lengths, tetragram_fitness_vals)
+#plt.title("tetragram fitness as a function of sample size")
+#plt.show()
+
+# Unit 12 - Index of Coincidence
+"""
+Notes: index of coincidence is for determining the likelihoood of a certain combination of letters
+using N choose k, (orderless probability of selecting k options from choices N) and allowing for all letters
+(a or b or c .... ) "or" is computed with addition + (as opposed to "and" with multiplication x).
+"""
+# Task 1 
+"""
+Write a function that calculates the IoC for a given piece of text. Allow for the possibilities that
+spaces may or may not be included.
+"""
+
+def calc_IOC(sample, spaces=False):
+	letter_count = count_letters(sample,spaces)
+	N = 0 # total characters
+	n_count = 0
+	for l in letter_count.keys():
+		n =  letter_count[l]
+		N += n
+		n_count += n*(n-1)
+	IOC = len(letter_count)*(n_count)/(N*(N-1)) # x letter count to normalize (26 or 27 if spaces)
+
+	return IOC
+
+
+"""
+exercise 1
+Randomly select some texts from your corpus (or any other English texts) and calculate the IoC for each. Is the average near 1.75? How much does it vary? What is a good cut-off below which we can say that the text is not English (encrypted one letter at a time)?
+"""
+sample_len = 20
+lengths = list(range(100,sample_len*100,100))
+IOC_vals = []
 
 section = ""
-for i in range(1,10):
-   start = i*len(loaded_corpus)//10
+for i in range(1,sample_len):
+   start = i*len(loaded_corpus)//sample_len
    section += loaded_corpus[start:start+500]
    #print()
    #print(loaded_corpus[start:start+500])
    #print()
-   sample_tetragram_fitness = tetragram_fitness(section)
-   tetragram_fitness_vals.append(sample_tetragram_fitness)
+   IOC = calc_IOC(section)
+   IOC_vals.append(IOC)
 
-print(lengths)
-print(tetragram_fitness_vals)
-plt.scatter(lengths, tetragram_fitness_vals)
-plt.title("tetragram fitness as a function of sample size")
+#print(lengths)
+#print(tetragram_fitness_vals)
+plt.scatter(lengths, IOC_vals)
+plt.title("IOC as a function of sample size")
 plt.show()
+
+# Unit 13 - ngram indox of coincidence
+"""
+Generalize your function to calculate the IoC for digrams, trigrams, etc. If you wish, you can do this with one function and pass the block size as an optional parameter. Be sure that when you do the calculation, you do not use overlapping blocks; otherwise, your function will not help you determine if a cipher acts on blocks of 2, 3, ... letters at a time
+"""
