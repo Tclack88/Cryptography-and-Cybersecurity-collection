@@ -474,3 +474,101 @@ plt.show()
 """
 Generalize your function to calculate the IoC for digrams, trigrams, etc. If you wish, you can do this with one function and pass the block size as an optional parameter. Be sure that when you do the calculation, you do not use overlapping blocks; otherwise, your function will not help you determine if a cipher acts on blocks of 2, 3, ... letters at a time
 """
+
+def count_ngrams(text, n=4, spaces=False):
+	ngram_count = {}
+	if not spaces:
+		text = ''.join(text.split())
+	#for i in range(0,len(text)-(n-1)):
+	for i in range(0,len(text)-(n-1),n):
+		ngram = text[i:i+n]
+		if ngram_count.get(ngram,None):
+			ngram_count[ngram] += 1
+		else:
+			ngram_count[ngram] = 1
+	return ngram_count
+	
+def calc_nIOC(text, n=4, spaces=False):
+	ngram_count = count_ngrams(text,n,spaces)
+	#print(ngram_count)
+	N = 0 # total ngrams eg. "abcdefg" for n=3 gives 5 (abc, bcd, ..., efg)
+	n_count = 0
+	for c in ngram_count.keys():
+		nc = ngram_count[c]
+		N += nc
+		n_count += nc*(nc-1)
+	IOC = (len(ngram_count)**n)*(n_count)/(N*(N-1)) # x letter count to normalize (26 or 27 if spaces)
+	#IOC = (n_count)/(N*(N-1)) # x letter count to normalize (26 or 27 if spaces)
+	return IOC
+
+"""
+sample_len = 20
+lengths = list(range(100,sample_len*100,100))
+IOC_vals = []
+
+section = ""
+for i in range(1,sample_len):
+   start = i*len(loaded_corpus)//sample_len
+   section += loaded_corpus[start:start+500]
+   #print()
+   #print(loaded_corpus[start:start+500])
+   #print()
+   IOC = calc_nIOC(section)
+   IOC_vals.append(IOC)
+
+#print(lengths)
+#print(tetragram_fitness_vals)
+plt.scatter(lengths, IOC_vals)
+plt.title("IOC as a function of sample size")
+plt.show()
+"""
+
+test1 = ''.join("""HRCQOFFLDFIXIWLMDUMWFMVDKPDFOYGAGSCKIUBDHMZFUIDFRSDIDFNCV
+ XLYDVVDNCIXIXUKFDFMUQFEDPSGVDZRUAHNUDKFYLKHOYGAGSCKOHICSA
+DVDFBGIGCYADLYHPMBQURSFHPUQFLMVPSADVDFOYGAGSCKIUBDHMDSNCX
+PUEVEIWDSYWYSHQDKTSZDVXFMXPDSOMKDGWGFMHKWOFVZVDNCZDFMXIMD
+VXLOYSSKVDZVHRCQCIVDNCIXIXUKFDLVZDLUFODVVDNCCQFGUEKFSKZDF
+HKCGTEFVDKNSKFUEBXVVLIUBDHMVDZVOFVZVDNCCQDVIQFMHNUVDP""".split())
+
+test2 = ''.join(""" SBERSLXSWMRLFNQYJSLAWESBMDGFGMCJBMOLSENRUORSESUSEGFNEJBLQ 
+SBERDLMFRSBMSLMNBCLSSLQWMRLFNQYJSLAEFSBLRMDLDMFFLQMFASBLO 
+CGNIREZLERGFLYGUIFGWSBEROLNMURLSBLEFALXGPNGEFNEALFNLPGQRE 
+FHCLCLSSLQREROLSWLLFGFLMOGUSJGEFSRLVLFMFAGFLJGEFSLEHBSSBL 
+EFALXGPNGEFNEALFNLPGQAEHQMDRMFASQEHQMDRMFASLSQMHQMDRMQLMC 
+RGEFGQFLMQSBLQMFHLRPGQLFHCERBSLXSOUSSBLRDMCCLRSOCGNIREZLS 
+BMSDMSNBLRLFHCERBERSBLGFLYGURBGUCANBGGRL""".split())
+
+test3 = ''.join("""ZONALRZJZXWVJTJSQYBVCMYYQVQYHCTBAJFKFJSRBUQKAFBXSCQVLENDN 
+SHVVKHUAITQDZYTYHCTBAJFKVKHRWIGHOCRYDRDEHFOWUXNHDQIZFNJMI 
+IXHGQKAQGSZXNYGPKOYAKFQNPKFSIQTQDLSPCOCEFWIBWCFFXERSNIIRF 
+QSLBGUCVFAYWZVPMQMXLBBVC""".split())
+
+test4 = ''.join("""NBDWXJBOMELDZVPGWMMELBJQRPMPTDDWRRGQIDRKJFOWWTZOLVKCOYIJQ 
+RMCQJZYJNVBECTBJJKJFOWWWWHFFTSNXYFBVVVTTYIETCBLKMIOXYJGVV 
+VSWGSELMMYEIMMGFUGMMXMBVRPBITXYNAOIOYEVWVSKDTYJZZHNNBCEMN 
+OZRVWMXMGMMMAYNKCYJJAWPFHSNXYFBVVVYPZWRRMGIELBCEJNBNOVDEC 
+MTMQIXYNAXEJJQNJZAMDRFWLZVKTNDRUYPZMEIMSSWHWDRTNLZRTJNJVG 
+JVOEXWIHWKMMOIOYVZIUXBJFVQWIKVWBCEEKWMWDFTGIIGTJGBX""".split())
+
+test5 = ''.join(""" SMCWRLQUKGBKHUMIPZXYOMCGTUCXPPGTDSEUNDFHHUCKGDXHSMCKTSMHX 
+FMHXDXYOMCGIZCXTOVUJIBYQDWKVKNGSMCVPRELKEBVTCVLUVELCWKSBE 
+JLJEGIRULHPZKDHCTOGREOFDMYJZNRNVLHIVLULSLDXDJHXFMJNDBOJKD 
+RPQKHPKFUVZEYVVBOLGYLDYWGUZNRNVLHIVLULZ
+""".split())
+
+"""
+for i,test in enumerate([test1,test2,test3,test4,test5]):
+	print(i)
+	for n in range(1,10):
+		length = len(test)
+		IOC = calc_nIOC(test,n)
+		print(f'{n}: {IOC}')
+	print()
+"""
+
+for n in range(1,6):
+	length = len(loaded_corpus)
+	IOC = calc_nIOC(loaded_corpus,n)
+	print(f'{n}: {IOC}')
+
+### TODO: fix this. I suspect it's wrong, shouldn't be growing like this
