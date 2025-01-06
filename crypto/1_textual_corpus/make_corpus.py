@@ -6,10 +6,11 @@
 Compile a corpus of English text. Be sure to remove all cover pages, licenses, tables of contents, etc., and diacritical marks (accent marks).
 """
 
-# Task2 	
+# Task2		
 """
 Take your corpus and create another one that contains no punctuation. Be careful of hyphens at the ends of lines; they might be in the middle of words. Your finished corpus should contain only words separated by single spaces (or end-of-line characters). Convert all letters to upper-case.
 """
+from collections import defaultdict
 import fileinput
 import itertools
 import json
@@ -22,7 +23,7 @@ import string
 regenerate = True # flag for determining whether or not to redo the longer steps (such as calculating monogram or tetragram frequencies
 
 src = "alice_in_wonderland.txt"
-#src = "Jurassic_Park_eng.txt"
+src = "Jurassic_Park_eng.txt"
 dst = "eng_corpus.txt"
 shutil.copyfile(src,dst)
 
@@ -184,7 +185,7 @@ def load_monogram_freq(monogram_frequency_file):
 # task 1/2
 """
 1
-Write a script to compile a table of tetragram frequencies from your corpus. Do not include spaces in this table. Your table will have 264  entries. Save the data in a format that you can access later.
+Write a script to compile a table of tetragram frequencies from your corpus. Do not include spaces in this table. Your table will have 264	entries. Save the data in a format that you can access later.
 2
 Write a script to compile and save a table of tetragram frequencies that includes spaces. Remember that newline characters separate words, so they count as spaces.
 """
@@ -299,7 +300,7 @@ def chi_square_fitness_mono(sample_freq, eng_freq, spaces=False):
 
 # exercise 1
 """
- For various lengths, take several randomly chosen passages of each length from your corpus (or any other texts) and find the fitness of each. Make a graph of the fitness as a function of the length of  the selected text. From your graph, notice the variability in the fitness and how it depends on the  length of text.
+ For various lengths, take several randomly chosen passages of each length from your corpus (or any other texts) and find the fitness of each. Make a graph of the fitness as a function of the length of  the selected text. From your graph, notice the variability in the fitness and how it depends on the	length of text.
 """
 
 lengths = list(range(100,1000,100))
@@ -410,10 +411,10 @@ def tetragram_fitness(sample,spaces=False):
 
 #section = ""
 #for i in range(1,10):
-#   start = i*len(loaded_corpus)//10
-#   section += loaded_corpus[start:start+500]
-#   sample_tetragram_fitness = tetragram_fitness(section)
-#   tetragram_fitness_vals.append(sample_tetragram_fitness)
+#	start = i*len(loaded_corpus)//10
+#	section += loaded_corpus[start:start+500]
+#	sample_tetragram_fitness = tetragram_fitness(section)
+#	tetragram_fitness_vals.append(sample_tetragram_fitness)
 
 #print(lengths)
 #print(tetragram_fitness_vals)
@@ -424,7 +425,7 @@ def tetragram_fitness(sample,spaces=False):
 # Unit 12 - Index of Coincidence
 """
 Notes: index of coincidence is for determining the likelihoood of a certain combination of letters
-using N choose k, (orderless probability of selecting k options from choices N) and allowing for all letters
+sing N choose k, (orderless probability of selecting k options from choices N) and allowing for all letters
 (a or b or c .... ) "or" is computed with addition + (as opposed to "and" with multiplication x).
 """
 # Task 1 
@@ -450,6 +451,8 @@ def calc_IOC(sample, spaces=False):
 exercise 1
 Randomly select some texts from your corpus (or any other English texts) and calculate the IoC for each. Is the average near 1.75? How much does it vary? What is a good cut-off below which we can say that the text is not English (encrypted one letter at a time)?
 """
+
+"""
 sample_len = 20
 lengths = list(range(100,sample_len*100,100))
 IOC_vals = []
@@ -469,60 +472,75 @@ for i in range(1,sample_len):
 plt.scatter(lengths, IOC_vals)
 plt.title("IOC as a function of sample size")
 plt.show()
+"""
+
 
 # Unit 13 - ngram indox of coincidence
 """
 Generalize your function to calculate the IoC for digrams, trigrams, etc. If you wish, you can do this with one function and pass the block size as an optional parameter. Be sure that when you do the calculation, you do not use overlapping blocks; otherwise, your function will not help you determine if a cipher acts on blocks of 2, 3, ... letters at a time
 """
 
-def count_ngrams(text, n=4, spaces=False):
-	ngram_count = {}
+def count_ngrams(text, n, include_spaces=False):
+	# better function name? make_ngram_freq
+	allowed = string.ascii_uppercase
+	if include_spaces:
+		allowed += ' '
+	else:
+		text = ''.join(text.split())
+
+	# create and return ngrams - all possible n-char permutations
+	all_perms = [''.join(p) for p in itertools.product(allowed,repeat=n)]
+	ngrams = dict(zip(all_perms,[0]*len(all_perms)))
+	for i in range(len(text)-(n-1)): # -3 to ensure we stop at final tetra val
+		gram = text[i:i+n]
+		ngrams[gram] += 1
+	ngrams = {k:v for k,v in ngrams.items() if v}
+	ngrams = dict(sorted(ngrams.items(), key=lambda d: d[1], reverse=True))
+	#count = len(tetragrams.keys())
+	# get frequencies
+	#for gram in ngrams:
+	#	grams[gram] /= count
+	return dict(ngrams)
+
+# The following count_ngrams was AI generated. #TODO: check and understand, differentiate from the above
+def count_ngrams(text, n=2, spaces=False):
+	"""Count n-grams using a sliding window."""
+	ngram_count = defaultdict(int)
+	# Adjust text if spaces are to be ignored
 	if not spaces:
 		text = ''.join(text.split())
-	#for i in range(0,len(text)-(n-1)):
-	for i in range(0,len(text)-(n-1),n):
+	for i in range(len(text) - n + 1):
 		ngram = text[i:i+n]
-		if ngram_count.get(ngram,None):
-			ngram_count[ngram] += 1
-		else:
-			ngram_count[ngram] = 1
+		ngram_count[ngram] += 1
 	return ngram_count
-	
+
 def calc_nIOC(text, n=4, spaces=False):
-	ngram_count = count_ngrams(text,n,spaces)
-	#print(ngram_count)
-	N = 0 # total ngrams eg. "abcdefg" for n=3 gives 5 (abc, bcd, ..., efg)
-	n_count = 0
-	for c in ngram_count.keys():
-		nc = ngram_count[c]
-		N += nc
-		n_count += nc*(nc-1)
-	IOC = (len(ngram_count)**n)*(n_count)/(N*(N-1)) # x letter count to normalize (26 or 27 if spaces)
-	#IOC = (n_count)/(N*(N-1)) # x letter count to normalize (26 or 27 if spaces)
+	"""Calculate normalized Index of Coincidence for n-grams."""
+	ngram_count = count_ngrams(text, n, spaces)
+	
+	N = sum(ngram_count.values())  # Total n-grams
+	n_count = sum(count * (count - 1) for count in ngram_count.values())
+	
+	# IOC without specific normalization, as we lack standard expected values for n-grams
+	base = 26
+	if spaces:
+		base += 1
+	IOC = base**n * n_count / (N * (N - 1))
+	
 	return IOC
+	
 
-"""
-sample_len = 20
-lengths = list(range(100,sample_len*100,100))
-IOC_vals = []
 
-section = ""
-for i in range(1,sample_len):
-   start = i*len(loaded_corpus)//sample_len
-   section += loaded_corpus[start:start+500]
-   #print()
-   #print(loaded_corpus[start:start+500])
-   #print()
-   IOC = calc_nIOC(section)
-   IOC_vals.append(IOC)
+corpus_ngram_freq = {}
+print("\ncorpus ngram frequencies:")
+print("___________________________")
+for n in range(1,6):
+	length = len(loaded_corpus)
+	IOC = calc_nIOC(loaded_corpus,n)
+	print(f'{n}: {IOC}')
+	corpus_ngram_freq[n] = IOC
 
-#print(lengths)
-#print(tetragram_fitness_vals)
-plt.scatter(lengths, IOC_vals)
-plt.title("IOC as a function of sample size")
-plt.show()
-"""
-
+print("\n\ntests on several samples:")
 test1 = ''.join("""HRCQOFFLDFIXIWLMDUMWFMVDKPDFOYGAGSCKIUBDHMZFUIDFRSDIDFNCV
  XLYDVVDNCIXIXUKFDFMUQFEDPSGVDZRUAHNUDKFYLKHOYGAGSCKOHICSA
 DVDFBGIGCYADLYHPMBQURSFHPUQFLMVPSADVDFOYGAGSCKIUBDHMDSNCX
@@ -530,13 +548,13 @@ PUEVEIWDSYWYSHQDKTSZDVXFMXPDSOMKDGWGFMHKWOFVZVDNCZDFMXIMD
 VXLOYSSKVDZVHRCQCIVDNCIXIXUKFDLVZDLUFODVVDNCCQFGUEKFSKZDF
 HKCGTEFVDKNSKFUEBXVVLIUBDHMVDZVOFVZVDNCCQDVIQFMHNUVDP""".split())
 
-test2 = ''.join(""" SBERSLXSWMRLFNQYJSLAWESBMDGFGMCJBMOLSENRUORSESUSEGFNEJBLQ 
+test2 = ''.join("""SBERSLXSWMRLFNQYJSLAWESBMDGFGMCJBMOLSENRUORSESUSEGFNEJBLQ 
 SBERDLMFRSBMSLMNBCLSSLQWMRLFNQYJSLAEFSBLRMDLDMFFLQMFASBLO 
 CGNIREZLERGFLYGUIFGWSBEROLNMURLSBLEFALXGPNGEFNEALFNLPGQRE 
 FHCLCLSSLQREROLSWLLFGFLMOGUSJGEFSRLVLFMFAGFLJGEFSLEHBSSBL 
 EFALXGPNGEFNEALFNLPGQAEHQMDRMFASQEHQMDRMFASLSQMHQMDRMQLMC 
 RGEFGQFLMQSBLQMFHLRPGQLFHCERBSLXSOUSSBLRDMCCLRSOCGNIREZLS 
-BMSDMSNBLRLFHCERBERSBLGFLYGURBGUCANBGGRL""".split())
+BMSDMSNBLRLFHCERBERSBLGFLYGURBGUCANBGGRL""".split()) # mono, a-z maps to dhlminogkpqeacbfrstjuvwxyz
 
 test3 = ''.join("""ZONALRZJZXWVJTJSQYBVCMYYQVQYHCTBAJFKFJSRBUQKAFBXSCQVLENDN 
 SHVVKHUAITQDZYTYHCTBAJFKVKHRWIGHOCRYDRDEHFOWUXNHDQIZFNJMI 
@@ -548,27 +566,32 @@ RMCQJZYJNVBECTBJJKJFOWWWWHFFTSNXYFBVVVTTYIETCBLKMIOXYJGVV
 VSWGSELMMYEIMMGFUGMMXMBVRPBITXYNAOIOYEVWVSKDTYJZZHNNBCEMN 
 OZRVWMXMGMMMAYNKCYJJAWPFHSNXYFBVVVYPZWRRMGIELBCEJNBNOVDEC 
 MTMQIXYNAXEJJQNJZAMDRFWLZVKTNDRUYPZMEIMSSWHWDRTNLZRTJNJVG 
-JVOEXWIHWKMMOIOYVZIUXBJFVQWIKVWBCEEKWMWDFTGIIGTJGBX""".split())
+JVOEXWIHWKMMOIOYVZIUXBJFVQWIKVWBCEEKWMWDFTGIIGTJGBX""".split()) # 5 viginere "fiver"
 
-test5 = ''.join(""" SMCWRLQUKGBKHUMIPZXYOMCGTUCXPPGTDSEUNDFHHUCKGDXHSMCKTSMHX 
+test5 = ''.join("""SMCWRLQUKGBKHUMIPZXYOMCGTUCXPPGTDSEUNDFHHUCKGDXHSMCKTSMHX 
 FMHXDXYOMCGIZCXTOVUJIBYQDWKVKNGSMCVPRELKEBVTCVLUVELCWKSBE 
 JLJEGIRULHPZKDHCTOGREOFDMYJZNRNVLHIVLULSLDXDJHXFMJNDBOJKD 
 RPQKHPKFUVZEYVVBOLGYLDYWGUZNRNVLHIVLULZ
 """.split())
 
-"""
+def percent_diff(a,b):
+	return 100*abs(a-b)/a
+	
+
 for i,test in enumerate([test1,test2,test3,test4,test5]):
-	print(i)
-	for n in range(1,10):
+	best_match_n = 0
+	best_match = np.inf
+	print(f'sample {i+1}:')
+	for n in range(1,6):
 		length = len(test)
 		IOC = calc_nIOC(test,n)
 		print(f'{n}: {IOC}')
+		match_check = percent_diff(IOC, corpus_ngram_freq[n])
+		if match_check < best_match:
+			best_match_n = n
+			best_match = match_check
+	print(f"best guess: {best_match_n}-gram -- {round(best_match,2)}%")
 	print()
-"""
 
-for n in range(1,6):
-	length = len(loaded_corpus)
-	IOC = calc_nIOC(loaded_corpus,n)
-	print(f'{n}: {IOC}')
 
 ### TODO: fix this. I suspect it's wrong, shouldn't be growing like this
