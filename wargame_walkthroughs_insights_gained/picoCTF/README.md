@@ -398,3 +398,58 @@ Warning                         : [minor] Trailer data after PNG IEND chunk`
 ... stuff I've cut out...
 ```
 So, copying the xxd hex dump from top to just before the `%PDF` portion into a new file (called `newf`) and reversing the xxd hexdump with `cat newf | xxd -r > backdata`, this backdata opens as a png giving the other portion.
+
+### disk images
+sleuthtools is a very useful utility (`sudo apt install sleuthkit`). It's not a tool itself but a collection of tools. There are different layers top to bottom is an image (img_) multimedia (mm), then file (f), then inode (i). And these each have some basic functions you're used to (cat, ls, stat), so combinations of these can usually be used to inspect the image and subparts (`img_stat`,`img_cat`,`mmls`,`mmcat`,`mmstat`,`fcat`,`fls`,`icat`,`ils`). There's also an `fsstat`, which is not a misspelling of `fstat` (<- non-existant) as well as other tools not metioned.
+
+you can do a first pass inspection on a disk image with `img_stat <IMAGE_NAME>`. It ir return somthing that might look like:
+
+```
+IMAGE FILE INFORMATION
+--------------------------------------------
+Image Type: raw
+
+Size in bytes: 104857600
+Sector size:    512
+```
+given we know it's a raw image type, we can use another tool on it, `mmls`. 
+```
+DOS Partition Table
+Offset Sector: 0
+Units are in 512-byte sectors
+
+      Slot      Start        End          Length       Description
+000:  Meta      0000000000   0000000000   0000000001   Primary Table (#0)
+001:  -------   0000000000   0000002047   0000002048   Unallocated
+002:  000:000   0000002048   0000204799   0000202752   Linux (0x83)
+```
+Important info here: We can see the start point of the partition we're interested in (2048). We also know it's a physical disk image as opposed to a logical disk image as mmls would cause an error because it wouldn't be able to parse out the partition table.
+
+Now we can get general details of the file system information (location of inodes or index nodes which is a general 'nix system data structure for files and directories) at that offset using `fsstat` with the `-o` flag. With the example above: `fsstat -o 2048 <IMAGE_NAME>`. This really will inform us as to the existance of files and directories. From here we can list the files. Like `ls`, but that's already taken, so instead use the `fls` command. We again need to specify the offset so the command would be something like: `fls -o 2048 <IMAGE_NAME>`. 
+```
+d/d 15617:      home
+d/d 11: lost+found
+r/r 12: .dockerenv
+d/d 21473:      bin
+d/d 1953:       boot
+d/d 13665:      dev
+d/d 17569:      etc
+d/d 3905:       lib
+d/d 15618:      media
+d/d 13669:      mnt
+d/d 13670:      opt
+d/d 13671:      proc
+d/d 15622:      root
+d/d 13672:      run
+d/d 15623:      sbin
+d/d 13673:      srv
+d/d 15700:      sys
+d/d 13674:      tmp
+d/d 15701:      usr
+d/d 13675:      var
+V/V 25377:      $OrphanFiles
+```
+By default this lists everything from the root directory, we could for instance recursively list all subfiles and sub-directories with the `-r` flag (cannot follow delted dirs) or only show deleted files with the `-d` flag. From the output above, `d/d` is a directory. The number following it is the inode of the file/folder. We could look into just one by adding that inode after the file/directory listing (eg. to check out the root foler whichi s on inode 15622, do: `fls -o 2048 <IMAGE_NAME> 15622`)
+
+We can recover the image using the sleuth kit recover `tsk_recover`:  `tsk_recover -o 206848 <IMAGE_NAME> <OUTPUT_FOLDER>/`  BUT this won't recover deleted (unallocated) files, so add the `-e` flag (for everything) somewhere in there. Alternatively, if you don't want to recover, instead continue to explore the image, you can use `icat` (i for inode). 
+
