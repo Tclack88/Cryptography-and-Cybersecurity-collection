@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import sys
-import socket
 import binascii
 from math import ceil
 from Crypto.Cipher import AES
@@ -13,7 +12,6 @@ flag_size = 24
 FLAG_PATH = "./longflag.txt"
 
 ASCII_RANGE = list(range(33,127)) # hex 21 (!) to (and include) hex 7e (~)
-ASCII_RANGE = [70,73,72,83,102,105,115,104,33]
 
 try:
 	with open(FLAG_PATH, "rb") as f:
@@ -37,7 +35,6 @@ def guess_decrypt(guess,padding):
 	padding_val = 16*ceil(len(guess)/16) - len(guess)
 	print(f"\tpadding_val: {padding_val}, length: {padding}")
 	pt = guess + padding_val.to_bytes(1,'little')*padding
-	#pt = pt.decode() # to string
 	ct = encrypt_oracle(pt)
 	return ct
 	
@@ -52,7 +49,6 @@ for size in range(1,flag_size+1): #(1 - 24)
 		compare_range = 16*ceil(len(guess)/16) #round up to nearest mult of 16
 		if result[:compare_range] == result[-compare_range:]:
 			print(guess)
-			#print(i.to_bytes(1,'little'))
 			decrypted_flag = i.to_bytes(1,'little') + decrypted_flag
 			break # early break
 
