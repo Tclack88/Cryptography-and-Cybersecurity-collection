@@ -15,6 +15,7 @@ Run the binary:
 
 This is like a lame text game where you can order hamburgers and stuff. Decompiling the (relevant) portion of main we can see a scanf (takiing in our choice 1-4) as well as several compare and nump if equal. These are clearly the 4 choices of the game. But we can see at `main <+123>` there's a compare to the number 9 which is clearly not the four listed. In this case it jumps and prints something.
 
+```
    0x00000000004004e5 <+63>:    mov    $0x0,%eax
    0x00000000004004ea <+68>:    call   0x400390 <printf@plt>
    0x00000000004004ef <+73>:    lea    -0x8(%rbp),%rax
@@ -83,6 +84,7 @@ This is like a lame text game where you can order hamburgers and stuff. Decompil
    0x0000000000400601 <+347>:   mov    $0x0,%eax
    0x0000000000400606 <+352>:   call   0x400390 <printf@plt>
    0x000000000040060b <+357>:   movl   $0x0,-0x4(%rbp)
+```
 
 Testing this choice 9
 
