@@ -1,0 +1,2 @@
+We took an image of a suspicious USB drive - can you investigate it in more detail?
+We think the user may have tried to cover their tracks.
