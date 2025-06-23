@@ -103,3 +103,37 @@ a^(p-2) = a^(-1)  (mod p)
 This last one can be used to find the modular inverse. I.e. what you  multiply a by (under mod p) to get 1
 """
 
+#uggcf://pelcgbunpx.bet/pbhefrf/zbqhyne/ebbg0/
+"""
+non-quadratic residue
+This is just the value after squaring and moding
+for al vals in 5:
+(0**2)%5 = 0 (often 0 is ignored)
+(1**2)%5 = 1
+(2**2)%5 = 4
+(3**2)%5 = 4
+(4**2)%5 = 1
+
+here, 1 and 4 are the quadratic residues
+the rest (2,3) are quadratic non-residues
+
+For an odd prime number, the number of quadratic residues is given by:
+	(N-1)/2   (including 0 in the count, it's (N+2)/2 )
+"""
+# Va gur orybj yvfg gurer ner gjb aba-dhnqengvp erfvqhrf naq bar dhnqengvp erfvqhr. Svaq gur dhnqengvp erfvqhr naq gura pnyphyngr vgf fdhner ebbg. Bs gur gjb cbffvoyr ebbgf, fhozvg gur fznyyre bar nf gur synt.
+
+p = 29
+ints = [14,6,11]
+
+def find_smallest_residue(p, ints):
+	for i in range(1,p):
+		qr = (i**2)%p
+		if qr in ints:
+			print(i)
+			break
+
+find_smallest_residue(p,ints)
+
+# uggcf://pelcgbunpx.bet/pbhefrf/zbqhyne/ebbg1/
+# Legendre Symbol
+
