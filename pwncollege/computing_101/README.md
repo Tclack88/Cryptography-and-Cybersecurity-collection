@@ -22,6 +22,72 @@ _start:
 	mov rax, 60
 	syscall
 ```
+### memory
+brackets like: `[rax]` or `[0x7ffffff]` means "treat" this as a memory address
+`mov rax, 0x12345` <- this instruction will just take the literal value 0x12345 and store it in rax.
+
+```asm
+mov rax, 0x12345
+mov rbx, [rax]
+```
+^This second line says "whatever value is stored at memory address `0x12345`, but it in rbx.
+
+```asm
+mov rax, 0x133337
+mov [rax], rbx
+```
+^The second line here says: take the value stored in rbx and store it at memory address 0x133337.
+
+```asm
+sub rsp, 8
+mov [rsp], rcx
+```
+^ this is equivalent to a push. We are moving the stack pointer up 8 bytes, then moving the value of rcx into where rsp points (because we're using `[rsp]`)
+
+### reading and writing
+One way to read from, write to and open files in c is to make a syscall. For reading and writing is:
+```
+n = read(0,buf,100);  // 0 means stdin
+write(1,buf,n); // 1 for stdout
+int open(const char *pathname, int flags)
+```
+
+This assembly equivalent is more complex and requires more arguments. The syscall value for read is `0` and for write is `1`, open is `2`, so this is what we will need to load into `rax` before the syscall. However we also need to establish that we're taking in from stdin and putting to stdout and where we want to read/write to, then finall that we want to read 100 bytes.
+
+(Arguments in order for a variety of sys calls go to: `rdi`, `rsi`, `rdx`, `r10`, `r8`, `r9`)
+
+In assembly (avoiding the header stuff), this can be accomplished with:
+
+```asm
+mov rdi, 0 ; 0 = stdin file descriptor
+mov rsi, rsp ; read from the stack pointer
+mov rdx, 100 ; number of bytes to read
+mov rax, 0 ; the syscall for read()
+syscall
+```
+key point: 100 is the buffer size, it's not necessarily going to be filled. The number of bytes read is returned in rax, which is why this is what will be passed into write
+
+```asm
+mov rdi, 1 ; 1 = stdout file descriptor
+mov rsi, rsp ; write data from stack
+mov rdx, rax ; number of butes to write (I'm a little unsure of why it's rax)
+mov rax, 1 ; syscall for write()
+syscall
+```
+
+```asm
+mov rdi, rsp ; read data onto stack
+mov rsi, 0 ; flag 0 = "read only" *** notes below
+mov rax, 2; syscall for open()
+syscall
+```
+Other flags for open:  (more info [here](https://4xura.com/pwn/orw-open-read-write-pwn-a-sandbox-using-magic-gadgets/))
+*	0 - read only
+*	1 - write only
+*	2 - read/write
+*	0x40 - create (if doesn't exist)
+* 	0x200 - trunctate file to zero-length (if it exists)
+*	0x400 - append to end of file
 
 ## inspection
 
