@@ -10,6 +10,7 @@ lessons learned while working through these modules:
 * intel syntax is pretty, AT&T is horrific, to use it, you must include:
 	* `.intel_syntax noprefix` 
 * the linker will complain if you don't include where to "start". If absent, it just starts from the top of the code
+* alternatively: compile withh gcc but specify we don't want to import standard libary. (Also it seems comments are not welcome) `gcc -nostdlib my-program.s -o my-program`
 * syscalls are made by setting the number (into `rax`) then performing the `syscall` command. In particular with exit, the syscall is 60 and the return value is loaded into the `rdi` register
 
 An example of a program that merely exits (with return value 42)
@@ -48,13 +49,13 @@ mov [rsp], rcx
 One way to read from, write to and open files in c is to make a syscall. For reading and writing is:
 ```
 n = read(0,buf,100);  // 0 means stdin
-write(1,buf,n); // 1 for stdout
+write(1,buf,n); // 1 for stdout (write(file_descriptor, memory_address, length))
 int open(const char *pathname, int flags)
 ```
 
 This assembly equivalent is more complex and requires more arguments. The syscall value for read is `0` and for write is `1`, open is `2`, so this is what we will need to load into `rax` before the syscall. However we also need to establish that we're taking in from stdin and putting to stdout and where we want to read/write to, then finall that we want to read 100 bytes.
 
-(Arguments in order for a variety of sys calls go to: `rdi`, `rsi`, `rdx`, `r10`, `r8`, `r9`)
+(Arguments in order for a variety of sys calls go to: `rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`... possible mnemonics: `Dizzi Dixie 89`, or you have dee **i**nitial, then the **s**econd, then dee e**x**tras, then you **c**ontinue on... seriously, is **8** or **9** still not enough?)
 
 In assembly (avoiding the header stuff), this can be accomplished with:
 
@@ -94,3 +95,16 @@ Other flags for open:  (more info [here](https://4xura.com/pwn/orw-open-read-wri
 * `strace` tracks system calls
 
 * gdb: I already know `run` and `break` commands, but `starti` will set a breakpoint at the very start of the program, before any instructions begin executing.
+
+
+# Solutions
+https://pwn.college/computing-101/hello-hackers/
+
+**Writing Output** (writing a single char (stored in address 1337000) ):
+```asm
+mov rdi, 1
+mov rsi, 1337000
+mov rdx, 1
+mov rax, 1
+syscall
+```
