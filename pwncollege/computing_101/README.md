@@ -45,6 +45,27 @@ mov [rsp], rcx
 ```
 ^ this is equivalent to a push. We are moving the stack pointer up 8 bytes, then moving the value of rcx into where rsp points (because we're using `[rsp]`)
 
+`rax` is understood to be 64 bits, `ebx` is 32 bits. But some other memory address (`[0x40400]` for example), the data type there is uncertain. So if you want to add to their, you must specify what it is
+
+```asm
+mov qword ptr [0x40400], 0x1337 // qword (quad word is 64, it's a pointer)
+```
+
+That being said, a full `qword ptr` cannot be moved at once due to hardware limitations, but `dword ptr`, `word ptr`, `byte ptr` have no problems, dword ptrs can move over full 32 bytes, but qword ptrs cannot. Anything less than a dword can be moved over
+
+```asm
+mov byte ptr [rdi], 0xab 				; This is fine
+mov word ptr [rdi], 0xabcd 				; This is fine
+mov dword ptr [rdi], 0xaaaabbbb 		; This is fine
+mov qword ptr [rdi], 0xaaaabbbbccccdddd ; NOT fine
+mov qword ptr [rdi], 0xaaaabbbbcccc 	; NOT fine
+mov qword ptr [rdi], 0xaaaabbbb		 	; NOT fine (still)
+mov qword ptr [rdi], 0xaaaabbb		 	; This is fine
+// How to do it? Use an intermediate:
+mov qword ptr rax, 0xaaaabbbbccccdddd
+mov [rdi], rax
+```
+
 ### reading and writing
 One way to read from, write to and open files in c is to make a syscall. For reading and writing is:
 ```
@@ -90,11 +111,38 @@ Other flags for open:  (more info [here](https://4xura.com/pwn/orw-open-read-wri
 * 	0x200 - trunctate file to zero-length (if it exists)
 *	0x400 - append to end of file
 
+## math
+* `add reg1, reg2` is like reg1 += reg2 (reg1 and reg2 are added, results stored in reg1)
+* `mul` vs `imul`: `mul` treats inputs as unsigned, `imul` (integer multiplication) treats them as signed, so it can take negative values. `mul` will treat negative numbers as their corresponding positive vals, eg. if reg1 = -1 and reg2 = 2, assuming an 8 bit register, where -1 in two's complement is `1111 1111` (255), `mul reg1, reg2` would be 255\* = 510. 
+* `div` can divide a 128 bit dividend (numerator if represented by a fraction) by a 64 bit divisor (denominator). But our registers only hold 64 bits. So the number is formed by placing it into rdx, then rax. This is one single number, represented as `rdx:rax`. Of course, if dividing small numbers like 10/3, you can set `rdx` to zero (you MUST actually, otherwise junk data left over there will result in incorrect results), then the `10` (ten) gets placed into `rax`:
+```asm
+mov rdx,0
+mov rax,10
+mov reg, 3
+div reg // result stored in rax with rdx holding remainder
+// This last instruction is like:
+rax = rdx:rax / reg // remainder not stored int rax (with 10/3, rax = 3)
+rdx = remainder     // remainder stored here (with 10/3, rdx = 1)
+```
+See div solutions in `4_integer-division.s` and `5_modulo-operation.s` 
+* although a mod can be cacluated with the `div` operator, it can be slow. A trick exists if doing `x % y` and `y` is a power of 2 (2^n), the result will be the lower n bits of x. eg. 143 / 4. 143 = `1000 1111`, 4 = `100`. The result would be `0010 0011.11`, where I write this `.11` as the remainder, it's remainder 3!. So those right two zeros (because 4 = 2^2) means I will "clear out" the right two binary digits of `x`, setting that as the remainder
+* `shr` and `shl` are shifting operations (`shr rax, 3` would shift rax 3 bits (not bytes) right and replace rax with that new value)
+* `and`, `or`, `not` and `xor` all work bitwise
+
+
 ## inspection
 
+* See your decompiled code (with binary) with `objump`: `objdump -M intel my-program` (`-M intel` overrides the default AT&T syntax
+* To export just the binary (not the human-readable), use `objcopy`: `objcopy --dump-section .text=output_file_name my-program` (why .text? that's where the raw machine code is held. No headers, metadata or other sections included)
 * `strace` tracks system calls
-
 * gdb: I already know `run` and `break` commands, but `starti` will set a breakpoint at the very start of the program, before any instructions begin executing.
+* How does this debugging break work? It's the same as including a single `int3` command:
+```asm
+mov rdi, 42
+mov ra, 60
+int3 ; triggers the debugger breakpoint, pausing execution
+syscall
+```
 
 
 # Solutions
