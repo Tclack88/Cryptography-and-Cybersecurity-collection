@@ -74,6 +74,7 @@ write(1,buf,n); // 1 for stdout (write(file_descriptor, memory_address, length))
 int open(const char *pathname, int flags)
 ```
 
+
 This assembly equivalent is more complex and requires more arguments. The syscall value for read is `0` and for write is `1`, open is `2`, so this is what we will need to load into `rax` before the syscall. However we also need to establish that we're taking in from stdin and putting to stdout and where we want to read/write to, then finall that we want to read 100 bytes.
 
 (Arguments in order for a variety of sys calls go to: `rdi`, `rsi`, `rdx`, `rcx`, `r8`, `r9`... possible mnemonics: `Dizzi Dixie 89`, or you have dee **i**nitial, then the **s**econd, then dee e**x**tras, then you **c**ontinue on... seriously, is **8** or **9** still not enough?)
@@ -111,7 +112,7 @@ Other flags for open:  (more info [here](https://4xura.com/pwn/orw-open-read-wri
 * 	0x200 - trunctate file to zero-length (if it exists)
 *	0x400 - append to end of file
 
-## math
+### math
 * `add reg1, reg2` is like reg1 += reg2 (reg1 and reg2 are added, results stored in reg1)
 * `mul` vs `imul`: `mul` treats inputs as unsigned, `imul` (integer multiplication) treats them as signed, so it can take negative values. `mul` will treat negative numbers as their corresponding positive vals, eg. if reg1 = -1 and reg2 = 2, assuming an 8 bit register, where -1 in two's complement is `1111 1111` (255), `mul reg1, reg2` would be 255\* = 510. 
 * `div` can divide a 128 bit dividend (numerator if represented by a fraction) by a 64 bit divisor (denominator). But our registers only hold 64 bits. So the number is formed by placing it into rdx, then rax. This is one single number, represented as `rdx:rax`. Of course, if dividing small numbers like 10/3, you can set `rdx` to zero (you MUST actually, otherwise junk data left over there will result in incorrect results), then the `10` (ten) gets placed into `rax`:
@@ -128,11 +129,28 @@ See div solutions in `4_integer-division.s` and `5_modulo-operation.s`
 * although a mod can be cacluated with the `div` operator, it can be slow. A trick exists if doing `x % y` and `y` is a power of 2 (2^n), the result will be the lower n bits of x. eg. 143 / 4. 143 = `1000 1111`, 4 = `100`. The result would be `0010 0011.11`, where I write this `.11` as the remainder, it's remainder 3!. So those right two zeros (because 4 = 2^2) means I will "clear out" the right two binary digits of `x`, setting that as the remainder
 * `shr` and `shl` are shifting operations (`shr rax, 3` would shift rax 3 bits (not bytes) right and replace rax with that new value)
 * `and`, `or`, `not` and `xor` all work bitwise
+* `cmp reg1, reg2`. If they are equal, it sets the zero flag to 1 (true), usually after this a jump is called (`je`, jump if equal will jump if that zero flag is indeed 1 or `jne`, jump if not equal if it's a 0). As with other instructions, like the `mov`, if specifying a register, you'll need to specify if it's dword, qword, etc.
+
+### stack
+The stack is the longer term memory store than the registers. Suitable for static data (as opposed to dynamic data such as that made with `malloc`, `realloc`, `calloc`, etc. and freed with... well `free`. This dynamic data goes on the heap is used for). You can put items on it with `push`, then pull them away with `pop`. Storing the value from pop is as simple as giving the register (eg. `pop rbx` takes the value on the top of the stack and aves it into `rbx`). Pushing is the opposing (`push rbx` will place whatever value is in rbx to the top of the stack)
+
+### other stuff
+
+* Jumping: Jumps generally aren't supported to directly allow jumping to immediate addresses, instead you have to load the address into a register, then call `jmp` on that register.
+```asm
+mov rax, 0x403000
+jmp rax
+// But this doesn't work:
+jmp 0x403000
+```
+Jumps can be relative or to a label (which which is a symbol that's created at run time to represent an address of an instruction or data). It lives in its own memory address. After a jump goes there, the instruction immediately after it is then executed (i.e. it's not the address of the next instruction to be executed). See `6_relative-jump.s` for an example.
+
+* If-else if-else with jumps. This logic can be done with a combination of labels and `cmp` along with `je` or `jne` statments. (eg given in `7_condtional-jump.s`)
 
 
 ## inspection
 
-* See your decompiled code (with binary) with `objump`: `objdump -M intel my-program` (`-M intel` overrides the default AT&T syntax
+* See your decompiled code (with binary) with `objdump`: `objdump -M intel my-program` (`-M intel` overrides the default AT&T syntax
 * To export just the binary (not the human-readable), use `objcopy`: `objcopy --dump-section .text=output_file_name my-program` (why .text? that's where the raw machine code is held. No headers, metadata or other sections included)
 * `strace` tracks system calls
 * gdb: I already know `run` and `break` commands, but `starti` will set a breakpoint at the very start of the program, before any instructions begin executing.
