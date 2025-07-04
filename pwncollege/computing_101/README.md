@@ -145,6 +145,8 @@ jmp 0x403000
 ```
 Jumps can be relative or to a label (which which is a symbol that's created at run time to represent an address of an instruction or data). It lives in its own memory address. After a jump goes there, the instruction immediately after it is then executed (i.e. it's not the address of the next instruction to be executed). See `6_relative-jump.s` for an example.
 
+* `je`, `jl` etc. cannot be paired with relative addresses (`je [rsi+8]`, `je rax` (etc). You have to make a label. See `8_indirect-jump.s` as an example of using this via the idea of a jump table (used for switch statements with many possible values) and `9_average-loop.s` for another example of jne into a label
+
 * If-else if-else with jumps. This logic can be done with a combination of labels and `cmp` along with `je` or `jne` statments. (eg given in `7_condtional-jump.s`)
 
 
