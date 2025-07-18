@@ -93,7 +93,7 @@ key point: 100 is the buffer size, it's not necessarily going to be filled. The 
 ```asm
 mov rdi, 1 ; 1 = stdout file descriptor
 mov rsi, rsp ; write data from stack
-mov rdx, rax ; number of butes to write (I'm a little unsure of why it's rax)
+mov rdx, rax ; number of bytes to write (I'm a little unsure of why it's rax)
 mov rax, 1 ; syscall for write()
 syscall
 ```
@@ -176,3 +176,32 @@ mov rdx, 1
 mov rax, 1
 syscall
 ```
+
+[debugging refresher](https://pwn.college/computing-101/debugging-refresher/)
+level 4
+```asm
+0x621ec554ed1b <main+629>       je     0x621ec554ed27 <main+641>           
+0x621ec554ec55 <main+431>       call   0x621ec554e190 <puts@plt>           
+0x621ec554ec5a <main+436>       lea    rdi,[rip+0xde7]        # 0x621ec554 
+0x621ec554ec61 <main+443>       call   0x621ec554e190 <puts@plt>           
+0x621ec554ec66 <main+448>       lea    rdi,[rip+0xe4f]        # 0x621ec554 
+0x621ec554ec6d <main+455>       call   0x621ec554e190 <puts@plt>           
+0x621ec554ec72 <main+460>       int3                                       
+0x621ec554ec73 <main+461>       nop                                        
+0x621ec554ec74 <main+462>       mov    DWORD PTR [rbp-0x1c],0x0            
+0x621ec554ec7b <main+469>       jmp    0x621ec554ed2b <main+645>           
+0x621ec554ec80 <main+474>       mov    esi,0x0                             
+0x621ec554ec85 <main+479>       lea    rdi,[rip+0xe3c]        # 0x621ec554 
+0x621ec554ec8c <main+486>       mov    eax,0x0                             
+0x621ec554ec91 <main+491>       call   0x621ec554e250 <open@plt>
+.
+.
+.
+0x621ec554ed2b <main+645>       cmp    DWORD PTR [rbp-0x1c],0x3
+0x621ec554ed2f <main+649>       jle    0x621ec554ec80 <main+474>           
+0x621ec554ed35 <main+655>       mov    eax,0x0 
+0x621ec554ed3a <main+660>       call   0x621ec554e97d <win>
+0x621ec554ed3f <main+665>       mov    eax,0x0 
+```
+In this challenge, a random value is loaded and we are supposed to figure it out. Or.... I can see in the beginning (main+462) we load 0 into `rbp-0x1c` then compare that to 3, if it's less than or equal, we jump into the random value assignment, otherwise we call a `win` function which seems all too obvious to ignore. I can set that value with `set {int} ($rbp-0x1c) = 0x5`
+
