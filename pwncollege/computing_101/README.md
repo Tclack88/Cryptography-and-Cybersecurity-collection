@@ -205,3 +205,77 @@ level 4
 ```
 In this challenge, a random value is loaded and we are supposed to figure it out. Or.... I can see in the beginning (main+462) we load 0 into `rbp-0x1c` then compare that to 3, if it's less than or equal, we jump into the random value assignment, otherwise we call a `win` function which seems all too obvious to ignore. I can set that value with `set {int} ($rbp-0x1c) = 0x5`
 
+level 5
+
+Checking out the relevant part of main:
+```
+   0x00005976efc7ad33 <+653>:   nop
+   0x00005976efc7ad34 <+654>:   mov    DWORD PTR [rbp-0x1c],0x0
+   0x00005976efc7ad3b <+661>:   jmp    0x5976efc7adeb <main+837>
+   0x00005976efc7ad40 <+666>:   mov    esi,0x0
+   0x00005976efc7ad45 <+671>:   lea    rdi,[rip+0xd5e]        # 0x5976efc7baaa
+   0x00005976efc7ad4c <+678>:   mov    eax,0x0
+   0x00005976efc7ad51 <+683>:   call   0x5976efc7a250 <open@plt>
+   0x00005976efc7ad56 <+688>:   mov    ecx,eax
+   0x00005976efc7ad58 <+690>:   lea    rax,[rbp-0x18]
+   0x00005976efc7ad5c <+694>:   mov    edx,0x8
+   0x00005976efc7ad61 <+699>:   mov    rsi,rax
+   0x00005976efc7ad64 <+702>:   mov    edi,ecx
+   0x00005976efc7ad66 <+704>:   call   0x5976efc7a210 <read@plt>
+   0x00005976efc7ad6b <+709>:   lea    rdi,[rip+0xd46]        # 0x5976efc7bab8
+   0x00005976efc7ad72 <+716>:   call   0x5976efc7a190 <puts@plt>
+   0x00005976efc7ad77 <+721>:   lea    rdi,[rip+0xd5a]        # 0x5976efc7bad8
+   0x00005976efc7ad7e <+728>:   mov    eax,0x0
+   0x00005976efc7ad83 <+733>:   call   0x5976efc7a1d0 <printf@plt>
+   0x00005976efc7ad88 <+738>:   lea    rax,[rbp-0x10]
+   0x00005976efc7ad8c <+742>:   mov    rsi,rax
+   0x00005976efc7ad8f <+745>:   lea    rdi,[rip+0xd51]        # 0x5976efc7bae7
+   0x00005976efc7ad96 <+752>:   mov    eax,0x0
+   0x00005976efc7ad9b <+757>:   call   0x5976efc7a260 <__isoc99_scanf@plt>
+   0x00005976efc7ada0 <+762>:   mov    rax,QWORD PTR [rbp-0x10]
+   0x00005976efc7ada4 <+766>:   mov    rsi,rax
+   0x00005976efc7ada7 <+769>:   lea    rdi,[rip+0xd3e]        # 0x5976efc7baec
+   0x00005976efc7adae <+776>:   mov    eax,0x0
+   0x00005976efc7adb3 <+781>:   call   0x5976efc7a1d0 <printf@plt>
+   0x00005976efc7adb8 <+786>:   mov    rax,QWORD PTR [rbp-0x18]
+   0x00005976efc7adbc <+790>:   mov    rsi,rax
+   0x00005976efc7adbf <+793>:   lea    rdi,[rip+0xd37]        # 0x5976efc7bafd
+   0x00005976efc7adc6 <+800>:   mov    eax,0x0
+   0x00005976efc7adcb <+805>:   call   0x5976efc7a1d0 <printf@plt>
+   0x00005976efc7add0 <+810>:   mov    rdx,QWORD PTR [rbp-0x10]
+   0x00005976efc7add4 <+814>:   mov    rax,QWORD PTR [rbp-0x18]
+   0x00005976efc7add8 <+818>:   cmp    rdx,rax
+   0x00005976efc7addb <+821>:   je     0x5976efc7ade7 <main+833>
+   0x00005976efc7addd <+823>:   mov    edi,0x1
+   0x00005976efc7ade2 <+828>:   call   0x5976efc7a280 <exit@plt>
+   0x00005976efc7ade7 <+833>:   add    DWORD PTR [rbp-0x1c],0x1
+   0x00005976efc7adeb <+837>:   cmp    DWORD PTR [rbp-0x1c],0x7
+   0x00005976efc7adef <+841>:   jle    0x5976efc7ad40 <main+666>
+   0x00005976efc7adf5 <+847>:   mov    eax,0x0
+   0x00005976efc7adfa <+852>:   call   0x5976efc7a97d <win>
+   0x00005976efc7adff <+857>:   mov    eax,0x0
+   0x00005976efc7ae04 <+862>:   mov    rcx,QWORD PTR [rbp-0x8]
+   0x00005976efc7ae08 <+866>:   xor    rcx,QWORD PTR fs:0x28
+   0x00005976efc7ae11 <+875>:   je     0x5976efc7ae18 <main+882>
+   0x00005976efc7ae13 <+877>:   call   0x5976efc7a1c0 <__stack_chk_fail@plt>
+   0x00005976efc7ae18 <+882>:   leave
+   0x00005976efc7ae19 <+883>:   ret
+```
+What happens in this code is that a value is randomly assigned from /dev/random and we have to guess it, as before, but after properly guessing, a counter is incremented until 7 is reached. So we could manually read that value each time at a breakpoint, or use some scripting (which normally would be run with `gdb -x my_script.gdb mycode.out`, however in this challenge, gdb is initialized. So from gdb, we can run it just by using `source my_script.gdb`)
+
+At main+757, the `scanf` function is called, so I figured we can jump to main+818 where the compare is made between `rdx` and `rax`
+```gdb
+set disassembly-flavor intel
+break *main+757
+commands
+        set  $rip=main+818
+        set  $rdx = 1
+        set  $rax = 1
+        continue
+end
+
+run
+continue
+```
+
+of course, we could simply jump to the "win" condition `set $rip=*main+852` then continue from there, but that's no fun
