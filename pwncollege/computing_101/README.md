@@ -104,7 +104,7 @@ mov rsi, 0 ; flag 0 = "read only" *** notes below
 mov rax, 2; syscall for open()
 syscall
 ```
-Other flags for open:  (more info [here](https://4xura.com/pwn/orw-open-read-write-pwn-a-sandbox-using-magic-gadgets/))
+Other flags for open:  (more info [here (all flags)](https://x64.syscall.sh/) and [here (ORW exploits)](https://4xura.com/pwn/orw-open-read-write-pwn-a-sandbox-using-magic-gadgets/))
 *	0 - read only
 *	1 - write only
 *	2 - read/write
@@ -113,7 +113,7 @@ Other flags for open:  (more info [here](https://4xura.com/pwn/orw-open-read-wri
 *	0x400 - append to end of file
 
 ### math
-* `add reg1, reg2` is like reg1 += reg2 (reg1 and reg2 are added, results stored in reg1)
+https://x64.syscall.sh/https://x64.syscall.sh/* `add reg1, reg2` is like reg1 += reg2 (reg1 and reg2 are added, results stored in reg1)
 * `mul` vs `imul`: `mul` treats inputs as unsigned, `imul` (integer multiplication) treats them as signed, so it can take negative values. `mul` will treat negative numbers as their corresponding positive vals, eg. if reg1 = -1 and reg2 = 2, assuming an 8 bit register, where -1 in two's complement is `1111 1111` (255), `mul reg1, reg2` would be 255\* = 510. 
 * `div` can divide a 128 bit dividend (numerator if represented by a fraction) by a 64 bit divisor (denominator). But our registers only hold 64 bits. So the number is formed by placing it into rdx, then rax. This is one single number, represented as `rdx:rax`. Of course, if dividing small numbers like 10/3, you can set `rdx` to zero (you MUST actually, otherwise junk data left over there will result in incorrect results), then the `10` (ten) gets placed into `rax`:
 ```asm
@@ -279,3 +279,44 @@ continue
 ```
 
 of course, we could simply jump to the "win" condition `set $rip=*main+852` then continue from there, but that's no fun
+
+## Building a Web Server
+Socket System call accepts 3 arguments:
+* domain (eg. `AF_INET` for ipv4) (int)
+* type (eg. `SOCK_STREAM` for TCP) (int)
+* protocol (usually set to 0) (int) 
+
+A bind call accepts 3 arguments:
+* sockfd (socket file descriptor, matches first arg in socket) (int)
+* `struct sockaddr_in` (ptr to address)
+* `socklen_t addrlen` (int)
+bind is necessary because socket exists in a namespace, but it has no address assigned to it without bind
+
+Listen accepts two arguements:
+* sockfd (int)
+* backlog (int)
+
+Accept takes 3 arguments:
+* sockfd (int)
+* `struct sockaddr` (ptr to addr)
+* `socklen_t` (ptr to addr length)
+
+### Declaring and referecing variables in assembly:
+
+If you want to write a string (which happens in this web server challenge, but also elsewhere). You can place the string to be written in the data section, and it can be moved directly to a variable (it would function as a pointer). Importantly, it will be a relative address, so the `offset` keyword must be used. Here's an example where a write is called and the pointer to the string being written is placed into rsi:
+
+```asm
+(some other code)
+
+mov rdi, 4
+mov rsi, offset str
+mov rdx, 19
+mov rax, 1
+syscall
+
+(some other code)
+
+.data
+     str:
+          .string <blah blah>
+```
