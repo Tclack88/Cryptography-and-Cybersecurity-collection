@@ -82,3 +82,14 @@ S      76104 sleep 100
 R+     76106 ps -o stat,pid,cmd
 ```
 
+## Permissions
+permissions can be modified in many ways. Generally it's `chmod OPTIONS FILE`. In typical files we might have: `-rwxrwxrwx`. The first chunk is the owner (called user `u`), the next chunk is the group `g` and the last is everyone else (others `o`). We can also refer to all of these `a`.
+
+* direct assignment: We can imagine these being 1's, so the read flag can be on `100` (bin 4), the write can be on `010` (bin 2) or the execute can be on `001`. We just add those numbers up and it ends up being an octal number (7 is a max) so if we wanted `-rwxr-x-w-` we could do `chmod 752 myfile`
+
+* add or remove: make modifications like `chmod u+w myfile`. It can also be grouped together: `chmod a+r,o+x myfile`
+
+* directly set if we want `-rwxr-x-w-`, we could just do: `chmod u=rwx,g=rx,o=w myfile`. Or if it's blank like `-rwx------`, you can do: `chmod u=rwx,g=-,o=- myfile`
+
+* mix the above two works: `chmod u=rwx,g-w,o+rw`
+
