@@ -42,6 +42,9 @@ root         100  0.0  0.0 227756  1408 ?        Ssl  Jul13   0:00 snapfu
 
 Finally, either of the above will truncate information, maybe the whole process won't be shown, you can fix this by adding (to either) some `w`'s (one gives you more, two gives you even more, maybe the full path. It stands for "wide"). 
 
+## named pipes
+Check out this strange file permission: `prw-r--r--`. That `p` (usually we see it blank `-` for a file, or `d` for a directory, but here it means this file is a named pipe. It can be made with the `mkfifo` command (fifo for first-in-first-out). fifo's will hang until both read and write instructions are received (similar to what happens when you just type `cat`). It's used for complex data flows, when sometimes, input and output commands are received separately.
+
 ### terminating, suspending, interrupting...
 * `kill` -- Terminate a process by it's id with the kill command (eg. `kill 342`). Note: not `pkill` which terminates based on name or other things.
 
@@ -92,4 +95,6 @@ permissions can be modified in many ways. Generally it's `chmod OPTIONS FILE`. I
 * directly set if we want `-rwxr-x-w-`, we could just do: `chmod u=rwx,g=rx,o=w myfile`. Or if it's blank like `-rwx------`, you can do: `chmod u=rwx,g=-,o=- myfile`
 
 * mix the above two works: `chmod u=rwx,g-w,o+rw`
+
+* suid bit is placed in the location of the `x` of the file owner (`-rwxr-x-w-`), but if there's an `s`, it means that regardless of whoever runs the program (provided it's executable by them), it will run with permissions of the file owner (eg. `-rwsr-x-w-` here, anyone in the group can run the file, but not everyone else). It works by running the suid program, which sets the user id (temporarily) to that of the owner. This gets set by `chmod u+s <progam_name>`
 
