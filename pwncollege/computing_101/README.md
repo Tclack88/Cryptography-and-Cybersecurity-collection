@@ -23,6 +23,9 @@ _start:
 	mov rax, 60
 	syscall
 ```
+
+Notes: `as` is the assembler, it turns the assembly code into machine code. Similar to how `gcc` turns C into assembly code and by default continues down until it's machine code. We start some of these things with `.` (eg. `.intel_syntax`, `.global`) and these are assembler directives, not an actual instruction, just how to interpret the text. `noprefix` makes it so you don't need the `%` (for registers) and `$` for numbers like AT&T does.
+
 ### memory
 brackets like: `[rax]` or `[0x7ffffff]` means "treat" this as a memory address
 `mov rax, 0x12345` <- this instruction will just take the literal value 0x12345 and store it in rax.
@@ -132,7 +135,15 @@ See div solutions in `4_integer-division.s` and `5_modulo-operation.s`
 * `cmp reg1, reg2`. If they are equal, it sets the zero flag to 1 (true), usually after this a jump is called (`je`, jump if equal will jump if that zero flag is indeed 1 or `jne`, jump if not equal if it's a 0). As with other instructions, like the `mov`, if specifying a register, you'll need to specify if it's dword, qword, etc.
 
 ### stack
-The stack is the longer term memory store than the registers. Suitable for static data (as opposed to dynamic data such as that made with `malloc`, `realloc`, `calloc`, etc. and freed with... well `free`. This dynamic data goes on the heap is used for). You can put items on it with `push`, then pull them away with `pop`. Storing the value from pop is as simple as giving the register (eg. `pop rbx` takes the value on the top of the stack and aves it into `rbx`). Pushing is the opposing (`push rbx` will place whatever value is in rbx to the top of the stack)
+The stack is the longer term memory store than the registers. Suitable for static data (as opposed to dynamic data such as that made with `malloc`, `realloc`, `calloc`, etc. and freed with... well `free`. This dynamic data goes on the heap is used for). You can put items on it with `push`, then pull them away with `pop`. Storing the value from pop is as simple as giving the register (eg. `pop rbx` takes the value stored on the address on the top of the stack and saves it into `rbx`. Eqivalent to `mov rbx, [rsp]` with an increment of rsp by 8 bytes). Pushing is the opposing (`push rbx` will place whatever value is in rbx to the top of the stack). Naturally, the stack pointer automatically increments (with pop) or decrements (with push) following these instructions.
+
+When a program is called with args, a return value is pushed, then addresses which hold the value of the args, then the arg count. When the program begins, it's pointing right at the value of the arg count. So a program you run like: `./my-program hello there` looks like this:
+```
+[rsp]    -> Argument Count (argc) (3)
+[rsp+8]  -> Pointer to program name ("./my-program")
+[rsp+16] -> Pointer to the 1st argument ("hello") emphasis, pointer to where the string "hello" is stored, not the actual value
+[rsp+24] -> Pointer to the 2nd argument ("there")
+```
 
 ### other stuff
 
