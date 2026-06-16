@@ -95,7 +95,7 @@ key point: 100 is the buffer size, it's not necessarily going to be filled. The 
 
 ```asm
 mov rdi, 1 ; 1 = stdout file descriptor
-mov rsi, rsp ; write data from stack
+mov rsi, rsp ; write data from stack (CPU can't stream from stdin to stdout, it needs a middleman/staging area in RAM
 mov rdx, rax ; number of bytes to write (I believe this is rax because it's the return value of the above read: exactly how many bytes were read)
 mov rax, 1 ; syscall for write()
 syscall
@@ -145,7 +145,12 @@ When a program is called with args, a return value is pushed, then addresses whi
 [rsp+24] -> Pointer to the 2nd argument ("there")
 ```
 
+`call <target>` The target is usually something not part of the assembly code, it's elsewhere, like system library functions, .so (**s**hared **o**bject) files. When it's done, the address of the NEXT instruction is placed on the stack. When the exterior function finishes, the stack pointer moves to the next item, the return address and resume.
+	* If writing your own .so file, it's assembled with `as` just the same, but then during the linking, add a `-shared` flag (eg. `ld -shared -o output.so input.o`)
+
 ### other stuff
+
+* `setz reg` checks zero-flag (whch is set to 0 or 1 following a `cmp` operation). If it's zero, this will set the provided `reg` to zero, otherwise, sets it to 1. NOTE: this operation (I believe) is directly copying the value at the zero flag, so it can only work on a 1 byte register (`al`, `bl`, `dil`). It wouldn't make sense to use `setz rax`
 
 * Jumping: Jumps generally aren't supported to directly allow jumping to immediate addresses, instead you have to load the address into a register, then call `jmp` on that register.
 ```asm
@@ -170,10 +175,11 @@ Jumps can be relative or to a label (which which is a symbol that's created at r
 * How does this debugging break work? It's the same as including a single `int3` command:
 ```asm
 mov rdi, 42
-mov ra, 60
+mov rax, 60
 int3 ; triggers the debugger breakpoint, pausing execution
 syscall
 ```
+* running with args while in gdb: `run arg1 arg2`. Simple.
 
 
 # Solutions
@@ -185,6 +191,30 @@ mov rdi, 1
 mov rsi, 1337000
 mov rdx, 1
 mov rax, 1
+syscall
+```
+
+location of a file containing flag is passed in as argument. open that file, read the flag, then write to stdout (Here it was poorly done, but it was adequate. The "bad thing" was using the stack pointer as the middleman to store the flag string)
+```asm
+.intel_syntax noprefix
+.global _start
+_start:
+mov rdi,[rsp+16]
+mov rsi,0
+mov rax,2
+syscall
+mov rdi,rax
+mov rsi,rsp
+mov rdx,80
+mov rax,0
+syscall
+mov rdi,1
+mov rsi,rsp
+mov rdx,80
+mov rax,1
+syscall
+mov rdi,42
+mov rax,60
 syscall
 ```
 
