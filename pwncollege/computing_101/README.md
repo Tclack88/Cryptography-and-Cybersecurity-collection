@@ -40,7 +40,7 @@ mov rbx, [rax]
 mov rax, 0x133337
 mov [rax], rbx
 ```
-^The second line here says: take the value stored in rbx and store it at memory address 0x133337.
+^The second line here says: take the value stored in register rbx and store it at memory address 0x133337.
 
 ```asm
 sub rsp, 8
@@ -54,7 +54,7 @@ mov [rsp], rcx
 mov qword ptr [0x40400], 0x1337 // qword (quad word is 64, it's a pointer)
 ```
 
-That being said, a full `qword ptr` cannot be moved at once due to hardware limitations, but `dword ptr`, `word ptr`, `byte ptr` have no problems, dword ptrs can move over full 32 bytes, but qword ptrs cannot. Anything less than a dword can be moved over
+That being said, a full `qword ptr` cannot be moved at once due to hardware limitations, but `dword ptr`, `word ptr`, `byte ptr` have no problems, dword ptrs can move over full 32 bits, but qword ptrs cannot. Anything less than a dword can be moved over
 
 ```asm
 mov byte ptr [rdi], 0xab 				; This is fine
@@ -67,6 +67,16 @@ mov qword ptr [rdi], 0xaaaabbb		 	; This is fine
 // How to do it? Use an intermediate:
 mov qword ptr rax, 0xaaaabbbbccccdddd
 mov [rdi], rax
+```
+
+***32 bit trap***: Generally, when you move something, it will zero-fill up to the point specified and leave the top unchanged eg.:
+```
+mov rax, 0xa <--- 0x000000000000000a (zerod'd out to the end since rax is 64 bit)
+mov ax, bl <--- 0x############0011 (assume `bl` is 11, `ah` is zero'd out, but not the rest) 
+```
+But if moving to a 32 bit register, it will zero fill EVERYTHING!
+```
+mov eax, bl <-0x0000000000000011 (assume bl is 11)
 ```
 
 ### reading and writing
@@ -145,8 +155,9 @@ When a program is called with args, a return value is pushed, then addresses whi
 [rsp+24] -> Pointer to the 2nd argument ("there")
 ```
 
-`call <target>` The target is usually something not part of the assembly code, it's elsewhere, like system library functions, .so (**s**hared **o**bject) files. When it's done, the address of the NEXT instruction is placed on the stack. When the exterior function finishes, the stack pointer moves to the next item, the return address and resume.
-	* If writing your own .so file, it's assembled with `as` just the same, but then during the linking, add a `-shared` flag (eg. `ld -shared -o output.so input.o`)
+`call <target>` The target is an address and it's not usually an address stored in the RAM of the code (i.e. it's not like jumping to a label), it's elsewhere, like system library functions, .so (**s**hared **o**bject) files. When it's done, the address of the NEXT instruction is placed on the stack. When the exterior function finishes, the stack pointer moves to the next item, the return address and resume.
+	* If writing your own .so file, it's assembled with `as` just the same, but then during the linking, add a `-shared` flag (eg. `ld -shared -o output.so input.o`). End with a `ret` instruction and if anything needs to be returned, it goes into the `rax` register. Any arguments passed to the `.so` file are stored in the usual order (`rdi`,`rsi`, etc.)
+	* caller convention. The function making the `call` is the "caller", and the function it calls is the "callee". Since many system calls use these: `rdi`,`rsi`,`rdx`,`rcx`,`r8`-`r11`, and `rax` (this on in particular holds the return value, so it can't be preserved), it's not the callee's responsibility to preserve these values, the caller, if they want to preserve it mush push onto the stack before making the call (then afterward, pop back in reverse order). However the callee must promise to preserve any values in: `rbx`,`rbp`, `r12`-`r15`. They may be used, but have to be restored.
 
 ### other stuff
 
