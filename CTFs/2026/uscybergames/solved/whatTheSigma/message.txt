@@ -1,0 +1,83 @@
+skibidi main {
+      cap continue_loop = W;
+      goon (continue_loop) {
+            yap chr;
+            slorp(chr);
+            edgy (chr == 10) { continue_loop = L; }
+            amogus {
+                  ohio (chr) {
+                        sigma rule 65: yapping("zesty"); bruh;
+                        sigma rule 66: yapping("vibe"); bruh;
+                        sigma rule 67: yapping("sussy"); bruh;
+                        sigma rule 68: yapping("sus"); bruh;
+                        sigma rule 69: yapping("slaps"); bruh;
+                        sigma rule 70: yapping("blud"); bruh;
+                        sigma rule 71: yapping("shlawg"); bruh;
+                        sigma rule 72: yapping("grindset"); bruh;
+                        sigma rule 73: yapping("spiraling"); bruh;
+                        sigma rule 74: yapping("fr"); bruh;
+                        sigma rule 75: yapping("looksmaxxing"); bruh;
+                        sigma rule 76: yapping("goated"); bruh;
+                        sigma rule 77: yapping("dawg"); bruh;
+                        sigma rule 78: yapping("shmlawg"); bruh;
+                        sigma rule 79: yapping("cheugy"); bruh;
+                        sigma rule 80: yapping("simp"); bruh;
+                        sigma rule 81: yapping("doomscrolling"); bruh;
+                        sigma rule 82: yapping("gassy"); bruh;
+                        sigma rule 83: yapping("hawk"); bruh;
+                        sigma rule 84: yapping("tuah"); bruh;
+                        sigma rule 85: yapping("mew"); bruh;
+                        sigma rule 86: yapping("rizzing"); bruh;
+                        sigma rule 87: yapping("rizzler"); bruh;
+                        sigma rule 88: yapping("cook"); bruh;
+                        sigma rule 89: yapping("cooking"); bruh;
+                        sigma rule 90: yapping("baddie"); bruh;
+                        sigma rule 97: yapping("drake"); bruh;
+                        sigma rule 98: yapping("aura"); bruh;
+                        sigma rule 99: yapping("edging"); bruh;
+                        sigma rule 100: yapping("edge"); bruh;
+                        sigma rule 101: yapping("gooning"); bruh;
+                        sigma rule 102: yapping("griddy"); bruh;
+                        sigma rule 103: yapping("diddy"); bruh;
+                        sigma rule 104: yapping("bazinga"); bruh;
+                        sigma rule 105: yapping("imposter"); bruh;
+                        sigma rule 106: yapping("devious"); bruh;
+                        sigma rule 107: yapping("ratio"); bruh;
+                        sigma rule 108: yapping("l"); bruh;
+                        sigma rule 109: yapping("ishowspeedishowmeat"); bruh;
+                        sigma rule 110: yapping("bomboclat"); bruh;
+                        sigma rule 111: yapping("mog"); bruh;
+                        sigma rule 112: yapping("mogging"); bruh;
+                        sigma rule 113: yapping("caseoh"); bruh;
+                        sigma rule 114: yapping("goonmaxing"); bruh;
+                        sigma rule 115: yapping("glizzy"); bruh;
+                        sigma rule 116: yapping("pibby"); bruh;
+                        sigma rule 117: yapping("omega"); bruh;
+                        sigma rule 118: yapping("male"); bruh;
+                        sigma rule 119: yapping("ishowspeed"); bruh;
+                        sigma rule 120: yapping("ambatukam"); bruh;
+                        sigma rule 121: yapping("uncanny"); bruh;
+                        sigma rule 122: yapping("wholesome"); bruh;
+                        sigma rule 48: yapping("reddit"); bruh;
+                        sigma rule 49: yapping("poggers"); bruh;
+                        sigma rule 50: yapping("kumalala"); bruh;
+                        sigma rule 51: yapping("savesta"); bruh;
+                        sigma rule 52: yapping("sisyphus"); bruh;
+                        sigma rule 53: yapping("oceangate"); bruh;
+                        sigma rule 54: yapping("pluh"); bruh;
+                        sigma rule 55: yapping("waxing"); bruh;
+                        sigma rule 56: yapping("tpose"); bruh;
+                        sigma rule 57: yapping("nickeh30"); bruh;
+                        sigma rule 32: yapping("opium"); bruh;
+                        sigma rule 46: yapping("bird"); bruh;
+                        sigma rule 44: yapping("cg5"); bruh;
+                        sigma rule 33: yapping("backrooms"); bruh;
+                        sigma rule 63: yapping("kino"); bruh;
+                        sigma rule 123: yapping("redpilled"); bruh;
+                        sigma rule 125: yapping("poknut"); bruh;
+                        sigma rule 95: yapping("november"); bruh;
+                        based: yapping(""); bruh;
+                  }
+            }
+      }
+}

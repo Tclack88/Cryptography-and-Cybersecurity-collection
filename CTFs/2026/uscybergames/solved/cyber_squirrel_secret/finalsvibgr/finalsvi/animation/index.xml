@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE animation-metadata PUBLIC '-//KDE//DTD krita 1.1//EN' 'http://www.calligra.org/DTD/krita-1.1.dtd'>
+<animation-metadata xmlns="http://www.calligra.org/DTD/krita">
+ <framerate value="24" type="value"/>
+ <range to="100" type="timerange" from="0"/>
+ <currentTime value="0" type="value"/>
+ <export-settings>
+  <sequenceFilePath value="" type="value"/>
+  <sequenceBaseName value="" type="value"/>
+  <sequenceInitialFrameNumber value="-1" type="value"/>
+ </export-settings>
+</animation-metadata>
