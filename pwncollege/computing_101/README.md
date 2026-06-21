@@ -193,6 +193,10 @@ syscall
 ```
 * running with args while in gdb: `run arg1 arg2`. Simple.
 
+## environment variables
+By default, a program runs with the environment variables it was called in. We can remove that entirely by preceeding the program call with `env -i` (where i here stands for "ignore").
+* To Add environment variables after clearing, just add them `env -i FOO="blahblah" ./my-program`
+* GDB: Also adds its own env variables, be aware if an exploit that uses this works in GDB but not outside of it
 
 # Solutions
 https://pwn.college/computing-101/hello-hackers/
