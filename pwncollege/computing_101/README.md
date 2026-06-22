@@ -128,12 +128,12 @@ Other flags for open:  (more info [here (all flags)](https://x64.syscall.sh/) an
 ### math
 https://x64.syscall.sh/https://x64.syscall.sh/* `add reg1, reg2` is like reg1 += reg2 (reg1 and reg2 are added, results stored in reg1)
 * `mul` vs `imul`: `mul` treats inputs as unsigned, `imul` (integer multiplication) treats them as signed, so it can take negative values. `mul` will treat negative numbers as their corresponding positive vals, eg. if reg1 = -1 and reg2 = 2, assuming an 8 bit register, where -1 in two's complement is `1111 1111` (255), `mul reg1, reg2` would be 255\* = 510. 
-* `div` can divide a 128 bit dividend (numerator if represented by a fraction) by a 64 bit divisor (denominator). But our registers only hold 64 bits. So the number is formed by placing it into rdx, then rax. This is one single number, represented as `rdx:rax`. Of course, if dividing small numbers like 10/3, you can set `rdx` to zero (you MUST actually, otherwise junk data left over there will result in incorrect results), then the `10` (ten) gets placed into `rax`:
+* `div <reg>` can divide a 128 bit dividend (numerator if represented by a fraction) by a 64 bit divisor (denominator). But our registers only hold 64 bits. So the number is formed by placing it into rdx, then rax. This is one single number, represented as `rdx:rax`. Of course, if dividing small numbers like 10/3, you can set `rdx` to zero (you MUST actually, otherwise junk data left over there will result in incorrect results), then the `10` (ten) gets placed into `rax`. `div` can't take a number directly `div 10`, instead the divisor (10 in this example) must be placed into some `<reg>`:
 ```asm
 mov rdx,0
 mov rax,10
-mov reg, 3
-div reg // result stored in rax with rdx holding remainder
+mov <reg>, 3   (eg. rcx)
+div <reg> // result stored in rax with rdx holding remainder
 // This last instruction is like:
 rax = rdx:rax / reg // remainder not stored int rax (with 10/3, rax = 3)
 rdx = remainder     // remainder stored here (with 10/3, rdx = 1)
@@ -144,6 +144,7 @@ See div solutions in `4_integer-division.s` and `5_modulo-operation.s`
 * `and`, `or`, `not` and `xor` all work bitwise
 * `cmp reg1, reg2`. If they are equal, it sets the zero flag to 1 (true), usually after this a jump is called (`je`, jump if equal will jump if that zero flag is indeed 1 or `jne`, jump if not equal if it's a 0). As with other instructions, like the `mov`, if specifying a register, you'll need to specify if it's dword, qword, etc.
 * `and` & `or`. Clearly what they do is simple, but another way to think of it: `and` acts as a mask where the 1's do the selecting, so 1010 & 0011 returns 0010 (the 11 selects th lower two bits of the input). `or` is a setter, it will set anything to 1 (it doesn't unset any 1's) 1010 | 1001 yields 1011 (the first and third bit stays 1, the last/lowest bit flips from 0 to 1). As a fun fact, ascii lower and uppercase letters differ by 32 which is the 5th bit, you can lowercase any number by or'ing it with the 5th bit set to 1. Less computational than subtracting 32. You could reverse it by and'ing it with that 5th bit as 0 and everything else set to 1.
+* `neg <reg>` negates. More direct than `imul <reg>,-1, but that's another option
 
 ### stack
 The stack is the longer term memory store than the registers. Suitable for static data (as opposed to dynamic data such as that made with `malloc`, `realloc`, `calloc`, etc. and freed with... well `free`. This dynamic data goes on the heap is used for). You can put items on it with `push`, then pull them away with `pop`. Storing the value from pop is as simple as giving the register (eg. `pop rbx` takes the value stored on the address on the top of the stack and saves it into `rbx`. Eqivalent to `mov rbx, [rsp]` with an increment of rsp by 8 bytes). Pushing is the opposing (`push rbx` will place whatever value is in rbx to the top of the stack). Naturally, the stack pointer automatically increments (with pop) or decrements (with push) following these instructions.
