@@ -124,6 +124,7 @@ Other flags for open:  (more info [here (all flags)](https://x64.syscall.sh/) an
 *	0x40 - create (if doesn't exist)
 * 	0x200 - trunctate file to zero-length (if it exists)
 *	0x400 - append to end of file
+NOTE: The `write` syscall will clobber `r11` (RFLAGS gets placed there, which tracks the CPU state like the zero flag, negative flag, etc.) and `rcx` (which takes the return instruction pointer, `RIP`)
 
 ### math
 https://x64.syscall.sh/https://x64.syscall.sh/* `add reg1, reg2` is like reg1 += reg2 (reg1 and reg2 are added, results stored in reg1)
