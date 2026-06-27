@@ -186,6 +186,7 @@ Jumps can be relative or to a label (which which is a symbol that's created at r
 * To export just the binary (not the human-readable), use `objcopy`: `objcopy --dump-section .text=output_file_name my-program` (why .text? that's where the raw machine code is held. No headers, metadata or other sections included)
 * `strace` tracks system calls
 * gdb: I already know `run` and `break` commands, but `starti` will set a breakpoint at the very start of the program, before any instructions begin executing.
+* `break main` vs `break *main`. The non-asterisk one skips past all the prologue stuff (pushing base pointer and moving the stack pointer). It also relies on debug info being present, which may not be the case. The asterisk one doesn't skip that prologue stuff and begins at the address where main really begins. An asterisk is strictly necessary for relative placements eg. `break *main + 42`
 * How does this debugging break work? It's the same as including a single `int3` command:
 ```asm
 mov rdi, 42
@@ -194,6 +195,18 @@ int3 ; triggers the debugger breakpoint, pausing execution
 syscall
 ```
 * running with args while in gdb: `run arg1 arg2`. Simple.
+* examine: `x/<num><unit><format> <address>`
+ * num: how many
+ * unit. valid units are:
+  * `b` byte (1 byte)
+  * `h` halfwrod (2 bytes)
+  * `w` word (4 bytes)
+  * `g` giant (8 btes)
+ * format. Valid formats are:
+  * `d` (decimal)
+  * `h` (hex)
+  * `s` (string)
+  * `i` (instruction)
 
 ## environment variables
 By default, a program runs with the environment variables it was called in. We can remove that entirely by preceeding the program call with `env -i` (where i here stands for "ignore").
@@ -320,7 +333,7 @@ Checking out the relevant part of main:
    0x00005976efc7ae18 <+882>:   leave
    0x00005976efc7ae19 <+883>:   ret
 ```
-What happens in this code is that a value is randomly assigned from /dev/random and we have to guess it, as before, but after properly guessing, a counter is incremented until 7 is reached. So we could manually read that value each time at a breakpoint, or use some scripting (which normally would be run with `gdb -x my_script.gdb mycode.out`, however in this challenge, gdb is initialized. So from gdb, we can run it just by using `source my_script.gdb`)
+What happens in this code is that a value is randomly assigned from /dev/random and we have to guess it, as before, but after properly guessing, a counter is incremented until 7 is reached. So we could manually read that value each time at a breakpoint, or use some scripting (which normally would be run with `gdb -x my_script.gdb mycode.out`, however in this challenge, gdb is initialized. So from gdb, we can run it just by using `source my_script.gdb`. Alternatively it can be called as `/challenge/run -x my_script.gdb`)
 
 At main+757, the `scanf` function is called, so I figured we can jump to main+818 where the compare is made between `rdx` and `rax`
 ```gdb
@@ -337,13 +350,27 @@ run
 continue
 ```
 
-of course, we could simply jump to the "win" condition `set $rip=*main+852` then continue from there, but that's no fun
+of course, we could simply jump to the "win" condition `set $rip=*main+852` then continue from there, but that's no fun. An alternative as this is a loop that runs and accepts values 7 times, we can save the value and set it to rbx-0x10. Then skip over the scanf call by setting the instruction pointer:
+
+```
+break *main+850
+commands
+        silent
+        set $var = *(unsigned long long *)($rbp-0x18)
+        printf "val: %llx\n",$var
+        set *(unsigned long long *)($rbp-0x10) = $var
+        set $rip = *main+860
+        continue
+end
+run
+```
 
 ## Building a Web Server
 Socket System call accepts 3 arguments:
-* domain (eg. `AF_INET` for ipv4) (int)
-* type (eg. `SOCK_STREAM` for TCP) (int)
+* domain (eg. `AF_INET` for ipv4) (int) (`AF_INET`=2)
+* type (eg. `SOCK_STREAM` for TCP) (int) (`SOCK_STREAM`=1)
 * protocol (usually set to 0) (int) 
+* (syscall number for `socket` = 41)
 
 A bind call accepts 3 arguments:
 * sockfd (socket file descriptor, matches first arg in socket) (int)
