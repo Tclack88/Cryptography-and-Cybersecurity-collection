@@ -55,24 +55,64 @@ jmp await_accept
   //handle child process
   child_process:
 
-  // child: close socket (r14) (why? does this not affect the traffic/response?)
+  // child: close socket (r14)
   mov rdi, r14
   mov rax, 3
   syscall
 
-   // child: read text content from client
+// child: read text content from client
   mov rdi, r15
   sub rsp, 1024
   mov rsi, rsp
   mov rdx, 1024
   mov rax, 0
   syscall
+  // temporarily save length in r14 for
+  mov r14, rax
 
-  // get filename location from string (store addr on rsp-16 and len on rsp-8)
+  // get filename location from POST request (store addr on rsp-16 and len on rsp-8)
   lea rdi, [rsp]
   call get_filename
 
-  // child: open file
+  // determine if post or get (skip if something else)
+  cmp BYTE PTR [rsp], 'G'
+  je get
+  cmp BYTE PTR [rsp], 'P'
+  jne close_child
+
+  post:
+  // child: open file for writing  (rsi, 65=OWRONLY|O_CREATE. From octal. create needs additional rdx for permissions 0777 octal = 0x1ff)
+  mov rdi, rax
+  mov rsi, 65
+  mov rdx, 0x1ff
+  mov rax, 2
+  syscall
+  // store file's fd in r13
+  mov r13, rax
+
+  // child: get content from POST request. Returns starting addr of content
+  lea rdi, [rsp]
+  call get_content
+  // get length of content for writing. rcx set in get_content
+  sub r14, rcx
+
+  // child: write content to file
+  mov rdi, r13
+  mov rsi, rax
+  mov rax, 1
+  mov rdx, r14
+  syscall
+
+  // child: write "ok" to client
+  mov rdi, r15
+  lea rsi, [rip+ok_response]
+  mov rdx, 19
+  mov rax, 1
+  syscall
+  jmp close_child
+
+  get:
+  // child: open file for reading
   mov rdi, rax
   mov rsi, 0
   mov rax, 2
@@ -87,17 +127,17 @@ jmp await_accept
   syscall
   push rax
 
-  // child: close file
-  mov rdi, r13
-  mov rax, 3
-  syscall
-
-  // child: write "OK" to client
+  // child: write "ok" to client
   mov rdi, r15
   lea rsi, [rip+ok_response]
   mov rdx, 19
   mov rax, 1
   syscall
+
+  // child: close file
+  //mov rdi, r13
+  //mov rax, 3
+  //syscall
 
   // child: write file content to socket
   pop rdx
@@ -106,7 +146,13 @@ jmp await_accept
   mov rax, 1
   syscall
 
-  // child: clean up stack memory allocated when reading text from client
+  close_child:
+  // child: close file
+  mov rdi, r13
+  mov rax, 3
+  syscall
+
+ // child: clean up stack memory allocated when reading text from client
   add rsp, 1024
   // child: close connection with client
   mov rdi, r15
@@ -119,10 +165,11 @@ jmp await_accept
   syscall
 
 
+
 ok_response:
   .ascii "HTTP/1.0 200 OK\r\n\r\n"
 
-get_filename:
+  get_filename:
 // expected input on rdi: "GET <location> <maybe-something-else-who-cares>"
 // use r11 to find first space and r12 to find 2nd space (they will holding byte values for each char)
 mov rcx,-1
@@ -142,4 +189,17 @@ jne second
 // return starting address in rax, null terminate 2nd space location so read will naturally stop
 lea rax, QWORD PTR [rdi+r11]
 mov BYTE PTR [rdi+rcx], 0
+ret
+
+get_content:
+// input: rdi (pointer to string on stack) = "POST <location> <other stuff> Content-Length: <NUM>\r\n\r\n<CONTENT>"
+// find and return pointer to (CONTENT) and it's length (NUM).
+mov rcx, -1
+find_separator:
+inc rcx
+mov eax, DWORD PTR [rdi+rcx]
+cmp eax, 0x0a0d0a0d
+jne find_separator
+add rcx, 4
+lea rax, BYTE PTR [rdi+rcx]
 ret
