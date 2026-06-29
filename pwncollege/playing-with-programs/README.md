@@ -6,8 +6,10 @@ notes and lessons learned
 - terminate input (from a read) without a new line: press `<ctrl-d>` instead of `<enter>`
 
 ## Talking Web
+- General points of confusion addressed
+	- "Host" (the server's name). below in `nc`,`curl` and python's request library, we will be connecting to an ip and at may be specifying a host name. It seems unnecessary if we have the ip address (DNS servers usually do ip lookups to find the host). Why would we need it? Virtual hosting. A company with many websites can host them all on a single machine with a single ip address
 - nc:
-	- `nc hostname port` to connet remotely
+	- `nc hostname port` to connect remotely
 	- send an HTTP request after connecting. eg: `GET / HTTP/1.0`
 	- Any more details in the request, can be added after this eg.
 	```
@@ -27,6 +29,10 @@ notes and lessons learned
 	keyword=value
 	```
 	note: the empty newline after `Content-Length` is necessary, it bridges to the actual content
+	- The content can be placed into a file ant then redirected. eg.
+	`nc "website.com" 80  < post_content.txt` (`post_content.txt` here contains everything accept the top `nc`-calling line
+	- Sending multiple values in a post: Since it's a post, not a get, we can't put the content as a query string, it goes in the botton. Must be on one line (eg. `key1=val1&key2=val2`)
+	- redirects: A 300-response (3xx) will be returned and must manually be followed
 - curl:
 	- netcat is general, curl is specifically made for HTTP, so explicit GET / HTTP/1.0 isn't required
 	- use `-A "Firefox"` flag to impersonate the user agent
@@ -52,8 +58,10 @@ notes and lessons learned
 	Connection: close
 	<html><head><title>Website Title</title></head><body><h1>content!</h1></body></html>
     ```
-	- Sending more args in your get request (query strings): `curl "website.com" -G -d "keyword=value"` `-G` specifies get and `-d` is for data
+	- Sending more args in your get request (query strings): `curl "website.com" -G -d "keyword=value"` `-G` specifies get and `-d` is for data.
+	- multiple values in query string, edit the content with `&` as separator as: `-G -d "pin=123&key=abc"`. Alternatively, it can just be included in query string, but with escaped `&`'s (`curl website.com/asset?pin=123\&key=abc`)
 	- POST: just remove the `-G` flag and retain the data `-d`: `curl "website.com" -d "keyword=value"` can optionally explicitly add `-X POST`: `curl -d "keyword=value" -X POST website.com`
+	- redirects: `-L` flag will automatically follow the redirect
 - python requests library
 	- 	```
 	  	import requests
@@ -63,7 +71,6 @@ notes and lessons learned
 		```
 	- add headers:  `requests.get(host, headers={"Host":"google.com"})` These headers can fool the server regarding which hostname the request is for
 	- Sending more args in your get request (query strings): `requests.get(url, params={"keyword":"value"})`
-	- multiple values in query string, edit the content with `&` as separator as: `-G -d "pin=123&key=abc"`
 	- POST request (similar to query strings, but change `params` to `data` 
 		```
 	  	import requests
@@ -71,3 +78,4 @@ notes and lessons learned
 		resp = requests.post(host, data={"keyword":"value"})
 		print(resp.text)
 		```
+	- redirects: taken care of automatically by requests library
