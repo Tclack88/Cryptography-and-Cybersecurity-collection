@@ -32,7 +32,16 @@ notes and lessons learned
 	- The content can be placed into a file ant then redirected. eg.
 	`nc "website.com" 80  < post_content.txt` (`post_content.txt` here contains everything accept the top `nc`-calling line
 	- Sending multiple values in a post: Since it's a post, not a get, we can't put the content as a query string, it goes in the botton. Must be on one line (eg. `key1=val1&key2=val2`)
-	- redirects: A 300-response (3xx) will be returned and must manually be followed
+	- redirects: A 300-response (3xx) will be returned and must manually be followed.
+	  - providing redirects as a server. Put it in a header and have netcat listen with that input: (`nc -l -N <port> < <response_file>` (note: -N closes the content immediately once a response is received.
+	  response_file:
+	  ```
+	  HTTP/1.1 301 Moved Permanently
+	  Host: challenge.localhost
+	  Location: http://challenge.localhost/attempt
+	  Connection: close
+	  ```
+	- cookies: the response would usually display the cookie set (can just do a `HEAD` instead of `GET` request). But toinclude a previous session's cookies add `Cookie: <name>=<value>` to the header (not `Set-Cookie: ...`. Think of this not meaning "set this cookie value to be...", rather, "this cookie was set to...", or "this is what the cookie was set to")
 - curl:
 	- netcat is general, curl is specifically made for HTTP, so explicit GET / HTTP/1.0 isn't required
 	- use `-A "Firefox"` flag to impersonate the user agent
@@ -62,6 +71,9 @@ notes and lessons learned
 	- multiple values in query string, edit the content with `&` as separator as: `-G -d "pin=123&key=abc"`. Alternatively, it can just be included in query string, but with escaped `&`'s (`curl website.com/asset?pin=123\&key=abc`)
 	- POST: just remove the `-G` flag and retain the data `-d`: `curl "website.com" -d "keyword=value"` can optionally explicitly add `-X POST`: `curl -d "keyword=value" -X POST website.com`
 	- redirects: `-L` flag will automatically follow the redirect
+	- cookies:
+	  - To save all cookies after session ends, use `-c <filename>` (`-c` short for `--cookie-jar`)
+	  - To append cookies from a previous sesstion, use `-b COOKIE=VAL;COOKIE2=VAL2` (no easy way to remember `-b`, it's "short" for `--cookie`. idk, maybe it's cookies you're `b`ringing?)
 - python requests library
 	- 	```
 	  	import requests
@@ -79,3 +91,10 @@ notes and lessons learned
 		print(resp.text)
 		```
 	- redirects: taken care of automatically by requests library
+	- cookies: These are created in sessions, a single TCP connection that remains open. Requests library by default will open a connetion, do it's GET/POST/whatever requests, then close, so any cookies that are set are dropped. You can instead use `requests.Session` which will maintain the connection and thus any cookies or other things that need to remain set like authentication.
+	```python
+	import requests
+	s = requests.Session()
+	resp = s.get("http://localhost")
+	print(resp.text)
+	```
