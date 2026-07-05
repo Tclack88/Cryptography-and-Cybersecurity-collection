@@ -98,3 +98,28 @@ notes and lessons learned
 	resp = s.get("http://localhost")
 	print(resp.text)
 	```
+## program misuse
+Some notes about various utilities (Lots of others probably here on [GTFObins](https://gtfobins.org/)):
+ - `od` : octal dump. converts to octal characters. You can also display alongside the characters with the `-c` flag `od -c filename` might give something like: 
+ ```
+ 0000000   h   e   l   l   o   -   f   r   i   e   n   d  \n
+ ```
+ (We can remove those spaces with tr: `od -c myfile | tr -d ' '`. This might remove intentional spaces though)
+ - `hd` hex dump (characters are displayed by default)
+ - `xxd` also hex dump, but allows the reverse. For instance `xxd my file | xxd -r` will display the file contents
+ - `base32` and `base64`. convert to and from the repsective bases. Both have a `-d` option allowing for reversal of input like the piping just shown in `xxd`
+ - `split` Allows for splitting contents from a file into multiple, eg by bytes `split myfile -b 5` might give:
+ 	```
+	xaa <--filename
+	  hello
+	xab
+	  -frie
+	xac
+	  -nd
+	```
+ - `gzip` compress a file (uncompressed with `gunzip`) (`gzip -c file > file.gz`)
+ - `bzip2` similarly `bzip2 -c file > file.bz` and `bunzip2` is used for decompression
+ - `zip`. Slightly more confusing `zip file.zip file`. It's backwards (add `-r` to make it recursiven and works for directories)
+ - `tar` ("tape archive"). Used to bring many files together to archive (though tar doesn't do compression, that's usually done with gzip or bzip2 and they're often done together). eg. Archiving a file is: `tar -cvf file.tar file` (**c**reate, **v**erbose, **f**ile). Unarchiving is `tar - xvf file.tar` (e**x**tract). That retains the original file permissions however. You can print the output to stdout instead of to the files with the `-O` flag (`tar -xvf file.tar -O`). Alternatively, some things can read the raw binary (since tarballs themselves are not compressed) `more` does this. You can also view it during the compression `tar -cf - file | cat` (the hyphen `-` here instead of a file name indicates stdout)
+ - `ar` Also archiving. Create an archive: `ar -r archive.a file` (`r` is for replace, which doubles as the adding/updating call). Extraction done with `ar -x archive.a` 
+ - `cpio` Another archiver. This one is weird. The input comes from find, ls, echo. etc., just a string with the file name or path. And it needs a redirect to the file archive `echo filename | cpio -o > filename.cpio` (`o` is for "copy **o**ut I guess). But actually, not specifying an output file will actually print the contents (with other stuff) to stdout `echo filename | cpio -o`. Extracting seems to place it in it's own location, rather than making a copied archive, which is not as useful (`-i` flag)

