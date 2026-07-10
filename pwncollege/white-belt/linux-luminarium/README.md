@@ -128,13 +128,9 @@ The `pw hash` will include, a `$` separated field indicating the hash algorithm 
 
 * John the ripper is tailor-made for cracking /etc/shadow files. Simply run `john /etc/shadow` and it will work its magic
 
-## Multiplexing screns
-`screen` is a command that will let you work on a terminal without having a new window. After opening, you can press <enter> a few tiems to get to the terminal itself, then to detach you must hit the activation key `<ctrl-A>` followed by `d`. To reattach, just use `screen -r` on that terminal.
-
-## Multiplexing screns
+## Multiplexing screens
 ### screen
-
-`screen` is a command that will let you work on a terminal without having a new window. After opening, you can press <enter> a few tiems to get to the terminal itself, then to detach you must hit the activation key `<ctrl-A>` followed by `d`. To reattach, just use `screen -r <session name>` on that terminal. To see all the sessions available, use `screen -ls` then there will be a number.name, kind of like `140.session2` This can be reattached by specifying the name: `screen -r session2`.
+`screen` is a command that will let you work on a terminal without having a new window. After opening, you can press <enter> a few tiems to get to the terminal itself, then to detach you must hit the activation key `<ctrl-A>` followed by `d`. To reattach, just use `screen -r` on that terminal. To see all the sessions available, use `screen -ls` then there will be a number.name, kind of like `140.session2` This can be reattached by specifying the name: `screen -r session2`.
 
 ### tmux
 More modern version of screen. Activation key is `<ctrl-B>` instead. Minor differences in syntax: `tmux ls` and `tmux attach` or `tmux a` for reattaching. `screen` and `tmux` share these activation keys:
@@ -151,4 +147,4 @@ Difference in selection menu of each active window:
 
 * `cat` is gone, what to do? read! `read MYVAL < file.txt; echo $MYVAL`
 
-* `ls` is gone, what to do? `echo`! `echo` is actually a built-in. `echo *` will list the contents of the currend directory, albeit in a not so pretty way
+* `ls` is gone, what to do? `echo`! `echo` is actually a built-in. `echo *` will list the contents of the current directory, albeit in a not so pretty way
