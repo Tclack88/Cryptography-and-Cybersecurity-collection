@@ -29,3 +29,6 @@ Here's a fetch in javascript making a post request
 	fetch(url,options)
 </script>
 ```
+### Cross Site Forgerty Requests (CSFR)
+ - Redirects preserve headers, so a simple get requests can be accomplished by setting a redirect. If it comes from the site of interest, then authentication cookies would still be present and there's no problems with Cross-Origin Request Sharing (CORS).
+ - HTML predates JS (and their associated seurity rules) and so CORS restrictions do not apply there, for instance with forms (and a post request made from it)
