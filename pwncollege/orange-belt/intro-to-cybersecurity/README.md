@@ -4,6 +4,7 @@
 `curl --path-as-is`: curl normally squashes input like `../../etc/passwd` This avoids that
 
 Valid command injection operators:
+
 |name|operator|
 ---
 |semicolon|;|
