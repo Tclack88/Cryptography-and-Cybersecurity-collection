@@ -98,6 +98,15 @@ notes and lessons learned
 	resp = s.get("http://localhost")
 	print(resp.text)
 	```
+
+    Setting cookies manually in python (rather than reflecting them):
+
+	```python
+	import requests
+	s = requests.Session()
+	s.cookies.set('cookie_key', 'cookie_value')
+	resp = s.get(...) / s.set(...)
+	```
 ## program misuse
 Some notes about various utilities (Lots of others probably here on [GTFObins](https://gtfobins.org/)):
  - `od` : octal dump. converts to octal characters. You can also display alongside the characters with the `-c` flag `od -c filename` might give something like: 
