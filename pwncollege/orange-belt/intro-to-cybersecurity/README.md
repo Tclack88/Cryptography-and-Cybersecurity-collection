@@ -6,15 +6,15 @@
 Valid command injection operators:
 
 |name|operator|
---------------
-| semicolon | ; |
-| newline | \n |
-| background | & |
-| pipe | \| |
-| and | && |
-| or | \|\| |
-| subshell | \`command-string\` |
-| subshell | $(command-string) |
+| ------- | ------ |
+| semicolon | `;` |
+| newline | `\n` |
+| background | `&` |
+| pipe | `\|` |
+| and | `&&` |
+| or | `\|\|` |
+| subshell | `` `command-string` `` |
+| subshell | `$(command-string)` |
 
 Other tricks:
 
@@ -84,3 +84,12 @@ helpful videos: [1](https://www.youtube.com/watch?v=6Ra17Qpj68c)
 - combine them for a particular IP on a particular port: `iptables -I INPUT -p tcp --dport 80 -s 10.0.0.1 -j ACCEPT`
 - Deleting a rule. You can list them to include line number (`iptables -L --line-numbers`) and then specify the rule you don't want (eg. `iptables -D INPUT 1` to delete whatever is listed as rule 1)
 - Save a particular configuration: `/sbin/iptables-save`. Clear/flush one: `iptables -F`
+
+### Denial of Service
+This can simply be done by netcatting to a resource because it makes a TCP connection. But a more sophisticated attack would involve forking or xargs (which can run a specified number of processes in parallel).
+
+- `xargs`. Useful for programs which won't read from standard input. See [summary video](https://www.youtube.com/watch?v=rp7jLi_kgPg). But in essence:
+	- `seq 50 | echo` (does nothing because echo doesn't read from stdin)
+	- `seq 50 | xargs echo` (will echo 1 - 50)
+	- use `-I SYMBOL` to do something with that input eg. `seq 50 | xargs -I {} touch {}.txt` (makes `1.txt` through 150.txt`). the symbol can be anything, but `{}` is just standard choice.
+	- how to DOS with xargs: `seq 50 | xargs -P 50 -I {} nc 10.0.0.2 1337` (`-P` sets the number of parallel processes)
