@@ -118,4 +118,30 @@ while True:
 How to know this that multithreading is more effective than multiprocessing? Monitor using `ss` (socket statistics)
 `watch -n 0.1 ss -s` will monitor and update every 0.1 seconds. multithreading topped off around 1200 connections while multiprocessing barely made 100. Why? a process in python spins up an entirely separate python interpretor. This is large RAM overhead. Threads share the same memory space and spawning a new one takes up very little memory and it occurs quickly. 
 
+### manual creation of packets (using scapy)
+Be it IP, ethernet, TCP, UDP, scapy can send packets, such as what you would see over wireshark. These are fake packets. scapy can be used in a IDE mode by typing `scapy` into the terminal and the packets can be initialized and any attributes can be set using dot notation (note, any python commands can also be done because it's combined with the python interpreter):
+```
+>>> scapy
+>>> p = IP(ttl=64) #ttl = time to live, 64 is set by default I believe
+>>> p.src="10.0.0.1"
+>>> p.dst="10.0.0.2"
+>>> p.another_attribute="whatever you want"
+>>> send(p) # send() sends on layer 3, which is the network layer (IP)
+```
+To see the valid list of commands, use `lsc()` (for "list commands") within the scapy interpreter. Packet types can be: `IP`, `Ether`, `TCP`, `UDP`
 
+The IP protocol is encapsulated by Ethernet and so making and sending an ethernet packet as above requires this explicity placement:
+```
+>>> p = Ether() / IP()
+>>> p[IP].src="10.0.0.1"
+>>> p[IP].dst="10.0.0.2"
+>>> sendp(p)  # sendp() instead of send() will send on layer 2, the data link layer (MAC addresses used here like on your wifi router or ethernet)
+```
+In general the OSI layer is structured like this:
+```
+application layer (http, tsl, dns)
+transport layer (tcp, udp)
+network layer (ip)
+link layer (ethernet, wlan)
+```
+and so we need to write in order of "outer to inner". The link layer encapsulates (contains) everything within it `Ether() / IP() / TCP()` for instance is the correct ordering
