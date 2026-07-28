@@ -145,3 +145,21 @@ network layer (ip)
 link layer (ethernet, wlan)
 ```
 and so we need to write in order of "outer to inner". The link layer encapsulates (contains) everything within it `Ether() / IP() / TCP()` for instance is the correct ordering
+
+### TCP handshake
+In a TCP handshake, we initialize a random sequence number (and send an 'S' flag for "syn"). The response will be a "synack" which will include the initial number incremented by 1 in its ack field, as well as it's own randomly set sequence number (and an 'SA' flag for the "synack"). Finally, an ack response is required which will return the same incremented sequence number received in the seq field and an incremented ack of the message response (and an "A" flag set for "ack"):
+```
+HOST A                                                  HOST B
+       ------Syn (seq=A, flags='A') ------------------>
+       <-----Synack (seq=B, ack=A+1, flags='SA' -------
+	   ------Ack (seq=A+1, ack=B+1, flags='A' -------->
+```
+in scapy, this can be accomplished as:
+
+```
+>>> ip = IP(dst="10.0.0.2")
+>>> SYN = TCP(sport=31337,dport=31337, seq=31337, flags='S')
+>>> SYNACK = sr1(ip/SYN)
+>>> ACK = TCP(sport=31337,dport=31337,seq=31338, ack=SYNACK[TCP].seq+1, flags='A')
+>>> send(ip/ACK)
+```
