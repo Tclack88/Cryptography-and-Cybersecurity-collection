@@ -163,3 +163,18 @@ in scapy, this can be accomplished as:
 >>> ACK = TCP(sport=31337,dport=31337,seq=31338, ack=SYNACK[TCP].seq+1, flags='A')
 >>> send(ip/ACK)
 ```
+
+### UDP
+Sending UDP message from python is simple from the socket library. The message being sent needs to be a byte string
+```python
+import socket
+
+ip = "10.0.0.2"
+port = 42
+msg = b"message out"
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.sendto(msg, (ip,port))
+dat, addr = s.recvfrom(1024)
+print(f"received from {addr} : {dat}")
+```
