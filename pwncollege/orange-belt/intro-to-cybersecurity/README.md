@@ -178,3 +178,14 @@ s.sendto(msg, (ip,port))
 dat, addr = s.recvfrom(1024)
 print(f"received from {addr} : {dat}")
 ```
+
+### ARP
+(address resolution protocol), this maps an ipv4 address to a MAC address. It's built on top of layer 2 (data link like Ethernet). It can take these args: `ARP(hwsrc, hwdst, psrc, pdst,op)`.(hardware src/dst and port src/dst). Its function depends on the op code supplied in the message:
+ - `1`: will ask "who-has"? (i.e. who has ip X? tell me your MAC)
+ - `2`: is the reply `is-at` (i.e. MAC address X is at ip Y)
+
+
+Routers and switches will even send a gratuitous op 2 without being asked. This way other routers or whatever can update their internal ARP caches and update their mapping.
+
+
+`arp_pkt = Ether()/ARP(hwsrc='th:is:MAC:ad:dr:ess', psrc='is.at.this.ip', pdst='who.im.tell.ing', op=2)`
