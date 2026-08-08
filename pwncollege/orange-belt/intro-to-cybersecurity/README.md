@@ -187,5 +187,9 @@ print(f"received from {addr} : {dat}")
 
 Routers and switches will even send a gratuitous op 2 without being asked. This way other routers or whatever can update their internal ARP caches and update their mapping.
 
-
 `arp_pkt = Ether()/ARP(hwsrc='th:is:MAC:ad:dr:ess', psrc='is.at.this.ip', pdst='who.im.tell.ing', op=2)`
+
+Technically `Ether()` needs to be supplied with a dst MAC address as well, beacause this is built on the link layer and isn't using IP, it can't look up to see who 10.0.0.2 is. But it defaults to broadband (`ff:ff:ff:ff:ff:ff`) if left blank, so it's telling everyone.
+
+#### ARP poisoning
+Since ARP can say which MAC address belongs to which IP, it can actually be used (just as above) to poison the recipient saying "hey, the ip address you're looking for is actually my machine". This way you can intercept communication. It's not enough to just do the poisoning, you also have to add that intended recipient ip address to your device through the command line. For example after the ARP poisoning telling that 10.0.0.3 is at your MAC address, the command `ip addr add 10.0.0.3/24 dev eth0` will ensure that you can receive connections there.
