@@ -193,3 +193,23 @@ Technically `Ether()` needs to be supplied with a dst MAC address as well, beaca
 
 #### ARP poisoning
 Since ARP can say which MAC address belongs to which IP, it can actually be used (just as above) to poison the recipient saying "hey, the ip address you're looking for is actually my machine". This way you can intercept communication. It's not enough to just do the poisoning, you also have to add that intended recipient ip address to your device through the command line. For example after the ARP poisoning telling that 10.0.0.3 is at your MAC address, the command `ip addr add 10.0.0.3/24 dev eth0` will ensure that you can receive connections there.
+
+To make a more targeted request, instead of poisoning all devices on the broadband, you need to find out the MAC address who you want to change the information of but using op=1 (the "who-is" arp request):
+
+`arp_pkt = Ether(dst='ff:ff:ff:ff:ff:ff')/ARP(psrc='tell.this.ip.(me)', pdst='who.has.this.ip', op=1)`
+
+#### man in the middle (using ARP poisoning)
+A talks to B and we need to sit in the middle bouncing messages between. One that that will mess things up is if we need to connecto a specific client while simultaneously needing to connect to that client. If we do `ip addr add 10.0.0.3 dev eth0` so that a poisoned client can connect to us, but ALSO try to connect to 10.0.0.3 via a TCP socket, then this will backfire. We need to use up tables to route 10.0.0.3 traffic to us instead:
+
+
+`iptables -t nat -A PREROUTING -i eth0 -p tcp -d ip.ad.dr.es --dport ###### -j REDIRECT --to-port #####`
+
+- `-t nat` selects the NAT (Network Address Translation table) (the default is the filter table, i.e. the firewall).
+- `-A PREROUTING` will `A`ppend the rule `PREROUTING` to the chain. This will intercept packages on the network interface before the kernel decides where it should go
+- `-i eth0` redirects through the `eth0` interface
+- `-p tcp` only applies rule to TCP packets
+- `-d ip.ad.dr.es` select targets destined for `ip.ad.dr.es`
+- `--dport #####` select targets destined to port #####
+- `j REDIRECT` "jump" target to REDIRECT (rather than letting it pass normally)
+- `--to port #####` tell where to funnel packet on local port of own machine
+
