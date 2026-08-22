@@ -213,3 +213,12 @@ A talks to B and we need to sit in the middle bouncing messages between. One tha
 - `j REDIRECT` "jump" target to REDIRECT (rather than letting it pass normally)
 - `--to port #####` tell where to funnel packet on local port of own machine
 
+## Cryptography
+
+Use python's cryptodome to xor entire strings rather than characters: `from Crypto.Util.strxor import strxor`. This function requires two byte strings as args and they must be equal in length (it will not automatically repeat one) `strxor(b'hi',b'ho')`
+
+- convert hexstring to bytes: `bytes.fromhex('5a4b7a9087be0c0d')`
+- AES from Cryptodome. `cipher = AES.new(key, `aes\_mode`)` 
+	- options for `aes\_mode`: `MODE\_ECB` `MODE\_EAX` `MODE\_CBC` `MODE\_CTR` [a ton more]("https://pycryptodome.readthedocs.io/en/latest/src/cipher/aes.html")
+	- cipher has an `.encrypt()` and `.decrypt()` method where you pass the bytes to be en/de-crypted
+
