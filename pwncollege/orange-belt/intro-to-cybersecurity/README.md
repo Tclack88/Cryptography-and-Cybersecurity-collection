@@ -218,7 +218,11 @@ A talks to B and we need to sit in the middle bouncing messages between. One tha
 Use python's cryptodome to xor entire strings rather than characters: `from Crypto.Util.strxor import strxor`. This function requires two byte strings as args and they must be equal in length (it will not automatically repeat one) `strxor(b'hi',b'ho')`
 
 - convert hexstring to bytes: `bytes.fromhex('5a4b7a9087be0c0d')`
-- AES from Cryptodome. `cipher = AES.new(key, `aes\_mode`)` 
-	- options for `aes\_mode`: `MODE\_ECB` `MODE\_EAX` `MODE\_CBC` `MODE\_CTR` [a ton more]("https://pycryptodome.readthedocs.io/en/latest/src/cipher/aes.html")
+- AES from Cryptodome. `cipher = AES.new(key, aes_mode)` 
+	- options for `aes_mode`: `MODE_ECB` `MODE_EAX` `MODE_CBC` `MODE_CTR` [a ton more]("https://pycryptodome.readthedocs.io/en/latest/src/cipher/aes.html")
 	- cipher has an `.encrypt()` and `.decrypt()` method where you pass the bytes to be en/de-crypted
 
+## Access Control
+
+- To add a user to a group. If logged in as that user, use `addgrp <newgroup name>` You will be prompted for the group password.
+- `getent`. Stands for "`get` `ent`ries". Used to get information from a database (`passwd`, `group`, `services`, `hosts`, `networks` are all databases). We can use this to see users part of group (or similar information). `getent group <groupname>` will do this. <groupname> is optional, without it, all groups will be shown
